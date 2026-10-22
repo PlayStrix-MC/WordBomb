@@ -13,7 +13,10 @@ void edit(dyn widget, dyn player) {
     String key = widget.id();
     player.input([ { text: "Новое значение ", color: "gray" }, { text: key, color: "gold" },
                    { text: " (сейчас " + widget.text() + "), «-» - отмена:", color: "gray" } ], 600, text -> {
-        if (text == "-") return;
+        if (text == "-") {
+            player.message([ { text: "Ввод отменён, ", color: "gray" }, { text: key, color: "gold" }, { text: " не изменён.", color: "gray" } ]);
+            return;
+        }
         player.command("wb config set " + key + " " + text);
     });
 }
