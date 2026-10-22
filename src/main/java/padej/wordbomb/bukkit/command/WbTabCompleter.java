@@ -26,8 +26,8 @@ public final class WbTabCompleter implements TabCompleter {
         String sub = args[0].toLowerCase(Locale.ROOT);
         boolean admin = Permissions.isEventer(sender);
         return switch (sub) {
-            case "accept" -> admin && args.length == 2 ? filter(words(plugin.suggestions()), args[1]) : List.of();
-            case "block" -> admin && args.length == 2 ? filter(words(plugin.reports()), args[1]) : List.of();
+            case "accept", "reject" -> admin && args.length == 2 ? filter(words(plugin.suggestions()), args[1]) : List.of();
+            case "block", "dismiss" -> admin && args.length == 2 ? filter(words(plugin.reports()), args[1]) : List.of();
             case "add", "remove", "offer", "report" -> args.length == 2 ? List.of("<слово>") : List.of();
             case "config" -> admin ? config(args) : List.of();
             case "mod" -> admin ? mod(args) : List.of();
@@ -55,7 +55,7 @@ public final class WbTabCompleter implements TabCompleter {
             case 2 -> filter(withNone(safe(log::dates)), args[1]);
             case 3 -> filter(List.of("none", "HH:mm:ss"), args[2]);
             case 4 -> filter(withNone(safe(log::players)), args[3]);
-            case 5 -> filter(List.of("none", ActionLogRepo.ACCEPT, ActionLogRepo.BLOCK, ActionLogRepo.REMOVE, ActionLogRepo.ADD), args[4]);
+            case 5 -> filter(List.of("none", ActionLogRepo.ACCEPT, ActionLogRepo.REJECT, ActionLogRepo.BLOCK, ActionLogRepo.DISMISS, ActionLogRepo.REMOVE, ActionLogRepo.ADD), args[4]);
             case 6 -> filter(List.of("none", "<слово>"), args[5]);
             default -> List.of();
         };

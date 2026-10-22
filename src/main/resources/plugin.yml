@@ -12,7 +12,7 @@ softdepend: [PlaceholderAPI]
 commands:
   wb:
     description: 'WordBomb command'
-    usage: '/wb <join|leave|start|offer|report|offer-list|report-list|top|accept|block|add|remove|search|config|mod|reload>'
+    usage: '/wb <join|leave|start|offer|report|offer-list|report-list|top|accept|reject|block|dismiss|add|remove|search|config|mod|reload>'
     aliases: [wordbomb]
 
 permissions:

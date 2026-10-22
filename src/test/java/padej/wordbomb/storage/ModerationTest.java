@@ -77,4 +77,22 @@ class ModerationTest {
         assertEquals(Moderation.Result.INVALID_WORD, moderation.apply(Moderation.Kind.REMOVE, "", "admin"));
         assertEquals(0, log.count());
     }
+
+    @Test
+    void rejectAndDismissDropVotesWithoutTouchingDictionary() {
+        assertEquals(Moderation.Result.NOT_IN_LIST, moderation.reject("слово", "admin"));
+        suggestions.vote("слово", player);
+        assertEquals(Moderation.Result.OK, moderation.reject("слово", "admin"));
+        assertFalse(suggestions.contains("слово"));
+        assertFalse(dictionary.contains("слово"));
+
+        dictionary.add("спорное");
+        assertEquals(Moderation.Result.NOT_IN_LIST, moderation.dismiss("спорное", "admin"));
+        reports.vote("спорное", player);
+        assertEquals(Moderation.Result.OK, moderation.apply(Moderation.Kind.DISMISS, "спорное", "admin"));
+        assertFalse(reports.contains("спорное"));
+        assertTrue(dictionary.contains("спорное"));
+        assertEquals(1, log.search(null, null, null, ActionLogRepo.REJECT, null).size());
+        assertEquals(1, log.search(null, null, null, ActionLogRepo.DISMISS, null).size());
+    }
 }

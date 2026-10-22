@@ -5,7 +5,9 @@
 //   wordbomb_mod.kind   - "offers" (предложения) или "reports" (жалобы)
 //   wordbomb_mod.page   - текущая страница (с нуля), wordbomb_mod.pages - сколько всего, wordbomb_mod.total - слов всего
 //   wordbomb_mod.row.N.word / .votes - строка N (1..8); пусто - строки нет
-// Действия - командами /wb от имени игрока (право wordbomb.eventer); плагин сам обновляет данные и переоткрывает экран.
+// Действия - командами /wb от имени игрока (право wordbomb.eventer); плагин сам обновляет данные и переоткрывает экран:
+//   строка row_N  - принять: предложения → /wb accept, жалобы → /wb block (слово удаляется из словаря)
+//   крестик drop_N - отклонить: предложения → /wb reject, жалобы → /wb dismiss (слово остаётся)
 
 int rows = 8;
 
@@ -33,6 +35,11 @@ void onOpen() {
             w.tooltip(offers ? "Принять в словарь" : "Удалить из словаря");
             w.enabled(true);
         }
+        dyn d = screen.widget("drop_" + i);
+        if (d != null) {
+            d.enabled(word != "");
+            d.tooltip(word == "" ? "" : offers ? "Отклонить предложение" : "Отклонить жалобу");
+        }
     }
 
     int total = storage.get("wordbomb_mod.total", 0);
@@ -48,6 +55,15 @@ void row(dyn widget, dyn player) {
     if (word == "") return;
     player.sound("ui.button.click", 0.6, 1);
     if (kind() == "offers") player.command("wb accept " + word); else player.command("wb block " + word);
+}
+
+// клик по крестику drop_N: отклонить без изменения словаря
+void drop(dyn widget, dyn player) {
+    String id = widget.id();
+    String word = storage.get("wordbomb_mod.row." + id.substring(5) + ".word", "");
+    if (word == "") return;
+    player.sound("block.note_block.bass", 0.6, 0.8);
+    if (kind() == "offers") player.command("wb reject " + word); else player.command("wb dismiss " + word);
 }
 
 void tab_offers(dyn widget, dyn player) {

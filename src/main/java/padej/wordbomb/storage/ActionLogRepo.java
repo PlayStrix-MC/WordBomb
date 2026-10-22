@@ -24,6 +24,10 @@ public final class ActionLogRepo {
     public static final String BLOCK = "block";
     public static final String ADD = "add";
     public static final String REMOVE = "remove";
+    /** Предложение отклонено (слово не добавлено, голоса сняты). */
+    public static final String REJECT = "reject";
+    /** Жалоба отклонена (слово остаётся в словаре, жалобы сняты). */
+    public static final String DISMISS = "dismiss";
 
     public static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     public static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm:ss");

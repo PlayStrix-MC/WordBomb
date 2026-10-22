@@ -60,6 +60,8 @@ public final class WbCommand implements CommandExecutor {
             case "report-list" -> voteList(sender, plugin.reports(), m().reportListHeader());
             case "accept" -> eventer(sender, () -> moderate(sender, Moderation.Kind.ACCEPT, arg(args, 1)));
             case "block" -> eventer(sender, () -> moderate(sender, Moderation.Kind.BLOCK, arg(args, 1)));
+            case "reject" -> eventer(sender, () -> moderate(sender, Moderation.Kind.REJECT, arg(args, 1)));
+            case "dismiss" -> eventer(sender, () -> moderate(sender, Moderation.Kind.DISMISS, arg(args, 1)));
             case "add" -> eventer(sender, () -> moderate(sender, Moderation.Kind.ADD, arg(args, 1)));
             case "remove" -> eventer(sender, () -> moderate(sender, Moderation.Kind.REMOVE, arg(args, 1)));
             case "search" -> eventer(sender, () -> search(sender, args));
@@ -143,9 +145,11 @@ public final class WbCommand implements CommandExecutor {
                     case BLOCK -> m().blocked();
                     case ADD -> m().added();
                     case REMOVE -> m().removed();
+                    case REJECT -> m().rejected();
+                    case DISMISS -> m().dismissed();
                 };
                 case INVALID_WORD -> m().onlyRussianLetters();
-                case NOT_IN_LIST -> kind == Moderation.Kind.ACCEPT ? m().notInOffers() : m().notInReports();
+                case NOT_IN_LIST -> kind == Moderation.Kind.ACCEPT || kind == Moderation.Kind.REJECT ? m().notInOffers() : m().notInReports();
                 case ALREADY_IN_DICTIONARY -> m().alreadyInDictionary();
                 case NOT_IN_DICTIONARY -> m().notInDictionaryAdmin();
             };
@@ -183,6 +187,7 @@ public final class WbCommand implements CommandExecutor {
             case ActionLogRepo.BLOCK -> "&c";
             case ActionLogRepo.REMOVE -> "&4";
             case ActionLogRepo.ADD -> "&2";
+            case ActionLogRepo.REJECT, ActionLogRepo.DISMISS -> "&e";
             default -> "&f";
         };
         return color + "[" + action + "]";
@@ -356,7 +361,7 @@ public final class WbCommand implements CommandExecutor {
         List<String> common = List.of("offer", "report", "offer-list", "report-list", "top");
         if (!Permissions.isEventer(sender)) return common;
         List<String> all = new java.util.ArrayList<>(common);
-        all.addAll(List.of("join", "leave", "start", "accept", "block", "add", "remove", "search", "config", "mod", "reload"));
+        all.addAll(List.of("join", "leave", "start", "accept", "reject", "block", "dismiss", "add", "remove", "search", "config", "mod", "reload"));
         return all;
     }
 }

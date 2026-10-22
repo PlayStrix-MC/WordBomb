@@ -63,6 +63,8 @@ public record Messages(
         String blocked,
         String added,
         String removed,
+        String rejected,
+        String dismissed,
         String notInOffers,
         String notInReports,
         String alreadyInDictionary,
@@ -150,6 +152,8 @@ public record Messages(
             "&aСлово &f{word} &aзаблокировано и удалено из словаря!",
             "&aСлово &f{word} &aдобавлено в словарь!",
             "&aСлово &f{word} &aудалено из словаря!",
+            "&eПредложение &f{word} &eотклонено.",
+            "&eЖалоба на &f{word} &eотклонена, слово остаётся в словаре.",
             "&cСлово не найдено в списке предложений!",
             "&cСлово не найдено в списке жалоб!",
             "&cЭто слово уже есть в словаре!",
@@ -172,7 +176,7 @@ public record Messages(
 
             "&cУ вас нет прав для этой команды!",
             "&cЭта команда только для игроков!",
-            "&cНеизвестная команда. Используйте: /wb <join|leave|start|offer|report|offer-list|report-list|top|accept|block|add|remove|search|config|mod|reload>",
+            "&cНеизвестная команда. Используйте: /wb <join|leave|start|offer|report|offer-list|report-list|top|accept|reject|block|dismiss|add|remove|search|config|mod|reload>",
 
             "Ожидание игроков",
             "Старт через {seconds}",

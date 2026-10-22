@@ -24,7 +24,7 @@ public final class Moderation {
     }
 
     /** Вид операции - для команды, которая выбирает текст ответа. */
-    public enum Kind { ACCEPT, BLOCK, ADD, REMOVE }
+    public enum Kind { ACCEPT, BLOCK, ADD, REMOVE, REJECT, DISMISS }
 
     private final Database db;
     private final SuggestionRepo suggestions;
@@ -50,7 +50,31 @@ public final class Moderation {
             case BLOCK -> block(word, admin);
             case ADD -> add(word, admin);
             case REMOVE -> remove(word, admin);
+            case REJECT -> reject(word, admin);
+            case DISMISS -> dismiss(word, admin);
         };
+    }
+
+    /** {@code /wb reject}: предложение отклонено - голоса сняты, в словарь слово не попадает. */
+    public Result reject(String word, String admin) {
+        String w = normalizedOrNull(word);
+        if (w == null) return Result.INVALID_WORD;
+        return db.write(c -> {
+            if (!suggestions.deleteWord(c, w)) return Result.NOT_IN_LIST;
+            log.insert(c, LocalDateTime.now(zone), admin, ActionLogRepo.REJECT, w);
+            return Result.OK;
+        });
+    }
+
+    /** {@code /wb dismiss}: жалоба отклонена - жалобы сняты, слово остаётся в словаре. */
+    public Result dismiss(String word, String admin) {
+        String w = normalizedOrNull(word);
+        if (w == null) return Result.INVALID_WORD;
+        return db.write(c -> {
+            if (!reports.deleteWord(c, w)) return Result.NOT_IN_LIST;
+            log.insert(c, LocalDateTime.now(zone), admin, ActionLogRepo.DISMISS, w);
+            return Result.OK;
+        });
     }
 
     /** {@code /wb accept}: слово из предложений попадает в словарь. */
