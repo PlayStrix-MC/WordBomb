@@ -204,9 +204,9 @@ public record Messages(
         m.put("countdownSeconds", "Отсчёт до старта, с");
         m.put("turnBaseSeconds", "База хода, с");
         m.put("minTurnSeconds", "Минимум хода, с");
-        m.put("lastSecondsWarning", "Предупреждать за, с");
+        m.put("lastSecondsWarning", "Предупреждение, с");
         m.put("minPlayers", "Минимум игроков");
-        m.put("twoLetterChance", "Шанс 2 букв (0..1)");
+        m.put("twoLetterChance", "Шанс 2 букв, 0..1");
         m.put("templateHistory", "Память шаблонов");
         m.put("templateAttempts", "Попыток шаблона");
         m.put("zoneRadius", "Радиус зоны");
@@ -215,8 +215,8 @@ public record Messages(
         m.put("spectatorLift", "Высота зрителя");
         m.put("wordHeight", "Высота слова");
         m.put("wordScale", "Масштаб слова");
-        m.put("freezePlayers", "Заморозка игроков");
-        m.put("eliminationHints", "Подсказок при выбывании");
+        m.put("freezePlayers", "Заморозка");
+        m.put("eliminationHints", "Подсказок, слов");
         return m;
     }
 }
