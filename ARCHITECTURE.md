@@ -371,14 +371,18 @@ Policy.allowClass("padej.wordbomb.bukkit.api.ArenaApi");
 
 ## 11. Команды и права
 
-Без изменений по синтаксису, плюс `leave` (появился, раньше был только кнопкой).
+Без изменений по синтаксису, плюс `leave` (появился, раньше был только кнопкой) и `reload`.
+
+Одно право - `wordbomb.eventer` (по умолчанию op). Обычные игроки вступают в игру и выходят **кнопками публичного экрана**;
+из команд им доступны только голоса и топы.
 
 | Команда | Право |
 |---|---|
-| `/wb join`, `/wb leave`, `/wb start`, `/wb top`, `/wb offer`, `/wb report`, `/wb offer-list`, `/wb report-list` | — |
-| `/wb accept`, `/wb block`, `/wb add`, `/wb remove`, `/wb search`, `/wb config ...` | `wordbomb.admin` (было `event_manager.event`) |
+| `/wb offer`, `/wb report`, `/wb offer-list`, `/wb report-list`, `/wb top` | - |
+| `/wb join`, `/wb leave`, `/wb start` | `wordbomb.eventer` |
+| `/wb accept`, `/wb block`, `/wb add`, `/wb remove`, `/wb search`, `/wb config ...`, `/wb reload` | `wordbomb.eventer` |
 
-Право переименовано в `wordbomb.admin`, а старое `event_manager.event` поддерживается как алиас для совместимости — оно указано в `plugin.yml` через `permission` и проверяется в `Permissions`.
+Старое `event_manager.event` не поддерживается: выдайте `wordbomb.eventer` той же группе.
 
 ---
 

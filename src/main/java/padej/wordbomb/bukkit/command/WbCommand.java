@@ -47,21 +47,21 @@ public final class WbCommand implements CommandExecutor {
         }
         String sub = args[0].toLowerCase(Locale.ROOT);
         switch (sub) {
-            case "join" -> asPlayer(sender, p -> plugin.api().join(p));
-            case "leave" -> asPlayer(sender, p -> plugin.api().leave(p));
-            case "start" -> asPlayer(sender, p -> plugin.api().start(p));
+            case "join" -> eventer(sender, () -> asPlayer(sender, p -> plugin.api().join(p)));
+            case "leave" -> eventer(sender, () -> asPlayer(sender, p -> plugin.api().leave(p)));
+            case "start" -> eventer(sender, () -> asPlayer(sender, p -> plugin.api().start(p)));
             case "top" -> top(sender);
             case "offer" -> asPlayer(sender, p -> offer(p, arg(args, 1)));
             case "report" -> asPlayer(sender, p -> report(p, arg(args, 1)));
             case "offer-list" -> voteList(sender, plugin.suggestions(), m().offerListHeader());
             case "report-list" -> voteList(sender, plugin.reports(), m().reportListHeader());
-            case "accept" -> admin(sender, () -> moderate(sender, Moderation.Kind.ACCEPT, arg(args, 1)));
-            case "block" -> admin(sender, () -> moderate(sender, Moderation.Kind.BLOCK, arg(args, 1)));
-            case "add" -> admin(sender, () -> moderate(sender, Moderation.Kind.ADD, arg(args, 1)));
-            case "remove" -> admin(sender, () -> moderate(sender, Moderation.Kind.REMOVE, arg(args, 1)));
-            case "search" -> admin(sender, () -> search(sender, args));
-            case "config" -> admin(sender, () -> asPlayer(sender, p -> config(p, args)));
-            case "reload" -> admin(sender, () -> reload(sender));
+            case "accept" -> eventer(sender, () -> moderate(sender, Moderation.Kind.ACCEPT, arg(args, 1)));
+            case "block" -> eventer(sender, () -> moderate(sender, Moderation.Kind.BLOCK, arg(args, 1)));
+            case "add" -> eventer(sender, () -> moderate(sender, Moderation.Kind.ADD, arg(args, 1)));
+            case "remove" -> eventer(sender, () -> moderate(sender, Moderation.Kind.REMOVE, arg(args, 1)));
+            case "search" -> eventer(sender, () -> search(sender, args));
+            case "config" -> eventer(sender, () -> asPlayer(sender, p -> config(p, args)));
+            case "reload" -> eventer(sender, () -> reload(sender));
             default -> chat().send(sender, m().unknownCommand());
         }
         return true;
@@ -282,8 +282,8 @@ public final class WbCommand implements CommandExecutor {
         }
     }
 
-    private void admin(CommandSender sender, Runnable action) {
-        if (Permissions.isAdmin(sender)) {
+    private void eventer(CommandSender sender, Runnable action) {
+        if (Permissions.isEventer(sender)) {
             action.run();
         } else {
             chat().send(sender, m().noPermission());
@@ -304,10 +304,10 @@ public final class WbCommand implements CommandExecutor {
     }
 
     static List<String> subcommandsFor(CommandSender sender) {
-        List<String> common = List.of("join", "leave", "start", "offer", "report", "offer-list", "report-list", "top");
-        if (!Permissions.isAdmin(sender)) return common;
+        List<String> common = List.of("offer", "report", "offer-list", "report-list", "top");
+        if (!Permissions.isEventer(sender)) return common;
         List<String> all = new java.util.ArrayList<>(common);
-        all.addAll(List.of("accept", "block", "add", "remove", "search", "config", "reload"));
+        all.addAll(List.of("join", "leave", "start", "accept", "block", "add", "remove", "search", "config", "reload"));
         return all;
     }
 }

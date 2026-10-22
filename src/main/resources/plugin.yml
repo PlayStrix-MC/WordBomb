@@ -16,9 +16,6 @@ commands:
     aliases: [wordbomb]
 
 permissions:
-  wordbomb.admin:
-    description: 'Administration of WordBomb (dictionary moderation, arena config, reload)'
-    default: op
-  event_manager.event:
-    description: 'Legacy alias of wordbomb.admin (kept for compatibility with the old plugin)'
+  wordbomb.eventer:
+    description: 'Everything behind the game: /wb join|leave|start, dictionary moderation, arena config, reload'
     default: op

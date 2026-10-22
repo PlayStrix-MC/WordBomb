@@ -24,7 +24,7 @@ public final class WbTabCompleter implements TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) return filter(WbCommand.subcommandsFor(sender), args[0]);
         String sub = args[0].toLowerCase(Locale.ROOT);
-        boolean admin = Permissions.isAdmin(sender);
+        boolean admin = Permissions.isEventer(sender);
         return switch (sub) {
             case "accept" -> admin && args.length == 2 ? filter(words(plugin.suggestions()), args[1]) : List.of();
             case "block" -> admin && args.length == 2 ? filter(words(plugin.reports()), args[1]) : List.of();
