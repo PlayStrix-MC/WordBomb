@@ -274,7 +274,7 @@ public record Messages(
 | `plugins/WordBomb/screens/wordbomb_*.jmc` | WordBomb — **только если файла нет** | сервер |
 | `plugins/WordBomb/scripts/wordbomb_*.jmp` | WordBomb — **только если файла нет** | сервер |
 | `plugins/WordBomb/particles/wordbomb_*.jmc` | WordBomb — **только если файла нет** | сервер |
-| `plugins/WordBomb/scripts.jma` | DisplayLib — копия политики по умолчанию, **только если файла нет** | сервер может расширять белый список |
+| `plugins/WordBomb/scripts.jma` | WordBomb — из ресурса `examples/wordbomb/scripts.jma` (своя политика, кладётся до регистрации набора), **только если файла нет** | сервер может расширять белый список |
 
 Папка WordBomb — набор содержимого DisplayLib (`ContentPacks.register(plugin)` в `arena/PackFiles`): DisplayLib сам
 загружает из неё экраны и частицы, следит за `screens/` (hot reload), скрипты экранов ищет только в её `scripts/`

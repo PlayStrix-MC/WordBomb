@@ -27,9 +27,29 @@ final class PackFiles {
         return (DisplayLib) DisplayLib.getInstance();
     }
 
-    /** Набор WordBomb (регистрируется при первом обращении; повторно - тот же). */
+    /** Политика скриптов WordBomb в jar - своя, а не копия политики DisplayLib. */
+    static final String RES_POLICY = "examples/wordbomb/" + ContentPack.POLICY_FILE;
+
+    /**
+     * Набор WordBomb (регистрируется при первом обращении; повторно - тот же). До регистрации кладётся своя
+     * {@code scripts.jma}: иначе DisplayLib создал бы её как копию своей политики по умолчанию.
+     */
     static ContentPack pack(JavaPlugin plugin) {
+        installPolicy(plugin);
         return ContentPacks.register(plugin);
+    }
+
+    private static void installPolicy(JavaPlugin plugin) {
+        Path target = plugin.getDataFolder().toPath().resolve(ContentPack.POLICY_FILE);
+        if (Files.exists(target)) return;
+        try (InputStream in = plugin.getResource(RES_POLICY)) {
+            if (in == null) return;
+            Files.createDirectories(target.getParent());
+            Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
+            plugin.getLogger().info("Создан " + target + " (политика скриптов WordBomb)");
+        } catch (IOException e) {
+            plugin.getLogger().warning("Не удалось создать " + target + ": " + e.getMessage());
+        }
     }
 
     /**

@@ -1,0 +1,23 @@
+// WordBomb - политика доступа скриптов экранов плагина (Jumper, .jma).
+// Действует на plugins/WordBomb/scripts/*.jmp и не зависит от plugins/DisplayLib/scripts.jma.
+// Создан плагином один раз, дальше правит сервер. Читается при старте и по /displaylib reload.
+
+// API экранов DisplayLib: глобалы player, screen, storage, timer, log и виджеты
+Policy.allowPackage("padej.displayLib.script.api");
+
+// Базовые классы: String, Math, Integer... (Class, Runtime, System, Thread остаются закрыты)
+Policy.allowPackage("java.lang");
+
+// Коллекции, Random, Optional и т.д.
+Policy.allowPackage("java.util");
+
+// Ошибки, перехваченные через try/catch: e.message и e.line
+Policy.allowMethod("me.padej.jumper.runtime.JmpError", "message");
+Policy.allowMethod("me.padej.jumper.runtime.JmpError", "getMessage");
+Policy.allowMethod("me.padej.jumper.runtime.JmpError", "line");
+
+// import "lib/x.jmp" - модули внутри plugins/WordBomb/scripts/
+Policy.allowModules();
+
+// Предел размера таблицы или массива, которые может построить скрипт
+Policy.maxTableSize(100000);
