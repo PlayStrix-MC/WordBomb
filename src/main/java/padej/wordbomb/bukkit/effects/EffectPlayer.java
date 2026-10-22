@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 
 /**
  * Эффекты частиц плагина (ресурсы {@code examples/wordbomb/particles/*.jmc}, копируются в
- * {@code plugins/DisplayLib/particles/}). Об отсутствующем эффекте предупреждает один раз.
+ * {@code plugins/WordBomb/particles/}). Об отсутствующем эффекте предупреждает один раз.
  */
 public final class EffectPlayer {
 
@@ -42,7 +42,7 @@ public final class EffectPlayer {
             return false;
         }
         if (missingReported.add(id)) {
-            log.warning("Эффект частиц '" + id + "' не найден в plugins/DisplayLib/particles/ - проверьте файл " + id
+            log.warning("Эффект частиц '" + id + "' не найден в plugins/WordBomb/particles/ - проверьте файл " + id
                     + ".jmc (плагин создаёт его при старте, если файла нет) и выполните /displaylib reload.");
         }
         return false;

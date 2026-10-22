@@ -44,31 +44,13 @@ public final class ConfigScreen {
         return (DisplayLib) DisplayLib.getInstance();
     }
 
-    /** Создать файлы экрана и скрипта в {@code plugins/DisplayLib/}, если их нет, и зарегистрировать экран. */
+    /** Создать файлы экрана и скрипта в {@code plugins/WordBomb/}, если их нет, и перечитать экран. */
     public void installResources() {
-        Path dir = displayLib().getDataFolder().toPath();
-        boolean created = copyIfMissing(RES_SCREEN, dir.resolve("screens").resolve(SCREEN_ID + ".jmc"));
-        copyIfMissing(RES_SCRIPT, dir.resolve("scripts").resolve(SCREEN_ID + ".jmp"));
+        boolean created = PackFiles.install(plugin, RES_SCREEN, "screens", SCREEN_ID + ".jmc");
+        PackFiles.install(plugin, RES_SCRIPT, "scripts", SCREEN_ID + ".jmp");
         // всегда перечитываем свой файл: если в screens/ есть другой файл с тем же id, иначе победит он
-        displayLib().getScreenRegistry().reloadScreen(SCREEN_ID);
+        PackFiles.reloadScreen(plugin, SCREEN_ID);
         if (created) plugin.getLogger().info("Экран " + SCREEN_ID + " создан из ресурсов плагина.");
-    }
-
-    private boolean copyIfMissing(String resource, Path target) {
-        if (Files.exists(target)) return false;
-        try (InputStream in = plugin.getResource(resource)) {
-            if (in == null) {
-                plugin.getLogger().warning("Ресурс " + resource + " отсутствует в jar плагина");
-                return false;
-            }
-            Files.createDirectories(target.getParent());
-            Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
-            plugin.getLogger().info("Создан " + target);
-            return true;
-        } catch (IOException e) {
-            plugin.getLogger().warning("Не удалось создать " + target + ": " + e.getMessage());
-            return false;
-        }
     }
 
     /** Открыть экран перед игроком (в 2 блоках по взгляду, как {@code /displaylib open}) и заполнить. */

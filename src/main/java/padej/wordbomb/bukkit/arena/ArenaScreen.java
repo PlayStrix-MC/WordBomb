@@ -62,49 +62,32 @@ public final class ArenaScreen implements Listener {
 
     // ------------------------------------------------------------------ ресурсы
 
-    /** Создать недостающие файлы в {@code plugins/DisplayLib/} и зарегистрировать их в DisplayLib. */
+    /** Создать недостающие файлы в {@code plugins/WordBomb/} (набор содержимого DisplayLib) и перечитать их. */
     public void installResources() {
-        Path displayLibDir = displayLib().getDataFolder().toPath();
-        boolean screenCreated = copyIfMissing(RES_SCREEN, displayLibDir.resolve("screens").resolve(SCREEN_ID + ".jmc"));
-        copyIfMissing(RES_SCRIPT, displayLibDir.resolve("scripts").resolve(SCREEN_ID + ".jmp"));
+        // свои файлы - в plugins/WordBomb (набор содержимого DisplayLib со своим scripts.jma)
+        boolean screenCreated = PackFiles.install(plugin, RES_SCREEN, "screens", SCREEN_ID + ".jmc");
+        PackFiles.install(plugin, RES_SCRIPT, "scripts", SCREEN_ID + ".jmp");
         boolean particlesChanged = false;
         boolean particlesMissing = false;
         for (String effect : EffectPlayer.ALL) {
-            particlesChanged |= copyIfMissing(RES_PARTICLES + effect + ".jmc", displayLibDir.resolve("particles").resolve(effect + ".jmc"));
+            particlesChanged |= PackFiles.install(plugin, RES_PARTICLES + effect + ".jmc", "particles", effect + ".jmc");
             particlesMissing |= Particles.effect(effect) == null;
         }
 
         // всегда перечитываем свой файл: если в screens/ есть другой файл с тем же id, иначе победит он
-        displayLib().getScreenRegistry().reloadScreen(SCREEN_ID);
+        PackFiles.reloadScreen(plugin, SCREEN_ID);
         if (screenCreated) plugin.getLogger().info("Экран " + SCREEN_ID + " создан из ресурсов плагина.");
         if (particlesChanged || particlesMissing) {
             displayLib().getParticleRegistry().loadAll();
         }
         for (String effect : EffectPlayer.ALL) {
             if (Particles.effect(effect) == null) {
-                plugin.getLogger().warning("Эффект " + effect + " не загружен DisplayLib (plugins/DisplayLib/particles/" + effect + ".jmc).");
+                plugin.getLogger().warning("Эффект " + effect + " не загружен DisplayLib (plugins/WordBomb/particles/" + effect + ".jmc).");
             }
         }
         if (!displayLib().getScreenRegistry().hasScreen(SCREEN_ID)) {
-            plugin.getLogger().warning("Экран " + SCREEN_ID + " не загружен DisplayLib (см. plugins/DisplayLib/screens/"
+            plugin.getLogger().warning("Экран " + SCREEN_ID + " не загружен DisplayLib (см. plugins/WordBomb/screens/"
                     + SCREEN_ID + ".jmc): публичный экран не появится.");
-        }
-    }
-
-    private boolean copyIfMissing(String resource, Path target) {
-        if (Files.exists(target)) return false;
-        try (InputStream in = plugin.getResource(resource)) {
-            if (in == null) {
-                plugin.getLogger().warning("Ресурс " + resource + " отсутствует в jar плагина");
-                return false;
-            }
-            Files.createDirectories(target.getParent());
-            Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
-            plugin.getLogger().info("Создан " + target);
-            return true;
-        } catch (IOException e) {
-            plugin.getLogger().warning("Не удалось создать " + target + ": " + e.getMessage());
-            return false;
         }
     }
 

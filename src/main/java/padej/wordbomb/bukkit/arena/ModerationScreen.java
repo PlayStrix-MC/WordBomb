@@ -66,28 +66,10 @@ public final class ModerationScreen {
     // ------------------------------------------------------------------ ресурсы
 
     public void installResources() {
-        Path dir = displayLib().getDataFolder().toPath();
-        boolean created = copyIfMissing(RES_SCREEN, dir.resolve("screens").resolve(SCREEN_ID + ".jmc"));
-        copyIfMissing(RES_SCRIPT, dir.resolve("scripts").resolve(SCREEN_ID + ".jmp"));
-        displayLib().getScreenRegistry().reloadScreen(SCREEN_ID);
+        boolean created = PackFiles.install(plugin, RES_SCREEN, "screens", SCREEN_ID + ".jmc");
+        PackFiles.install(plugin, RES_SCRIPT, "scripts", SCREEN_ID + ".jmp");
+        PackFiles.reloadScreen(plugin, SCREEN_ID);
         if (created) plugin.getLogger().info("Экран " + SCREEN_ID + " создан из ресурсов плагина.");
-    }
-
-    private boolean copyIfMissing(String resource, Path target) {
-        if (Files.exists(target)) return false;
-        try (InputStream in = plugin.getResource(resource)) {
-            if (in == null) {
-                plugin.getLogger().warning("Ресурс " + resource + " отсутствует в jar плагина");
-                return false;
-            }
-            Files.createDirectories(target.getParent());
-            Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
-            plugin.getLogger().info("Создан " + target);
-            return true;
-        } catch (IOException e) {
-            plugin.getLogger().warning("Не удалось создать " + target + ": " + e.getMessage());
-            return false;
-        }
     }
 
     // ------------------------------------------------------------------ открытие и листание

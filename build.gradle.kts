@@ -29,7 +29,7 @@ val displayLibApi by tasks.registering(Jar::class) {
     description = "DisplayLib jar без классов me.padej.jumper (только для компиляции)"
     archiveFileName = "DisplayLib-api.jar"
     destinationDirectory = layout.buildDirectory.dir("tmp/displayLibApi")
-    from(zipTree("libs/DisplayLib-1.21.11+3.1.0.jar")) {
+    from(zipTree("libs/DisplayLib-1.21.11+dev.jar")) {
         exclude("me/padej/jumper/**")
         exclude("META-INF/services/javax.script.ScriptEngineFactory")
     }
@@ -39,7 +39,7 @@ dependencies {
     // Paper API 1.21.11 - только на компиляцию, сервер даёт его в рантайме
     compileOnly("io.papermc.paper:paper-api:$mcVersion-R0.1-SNAPSHOT")
 
-    // DisplayLib 3.1.0 - экраны и частицы. Плагин DisplayLib должен стоять на сервере (depend в plugin.yml).
+    // DisplayLib (сборка с наборами содержимого, ContentPacks) - экраны и частицы. Плагин DisplayLib должен стоять на сервере (depend в plugin.yml).
     // Внутри jar лежит старый Jumper в том же пакете me.padej.jumper (без Config.Comment / loadOrCreate / update),
     // поэтому на компиляцию идёт копия без него - см. задачу displayLibApi ниже
     compileOnly(files(displayLibApi.map { it.archiveFile }))

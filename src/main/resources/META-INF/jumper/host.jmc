@@ -1,0 +1,15 @@
+// Дескриптор хоста Jumper для редакторов: скрипты WordBomb - экраны DisplayLib.
+// Плагин его не читает; редактор находит его в plugins/WordBomb.jar.
+String name = "WordBomb";
+String root = "WordBomb";                       // plugins/WordBomb (относительно папки JAR)
+dyn scripts = ["scripts/**/*.jmp"];
+String access = "scripts.jma";                  // своя политика - как в игре
+dyn configs = ["screens/**/*.jmc", "particles/**/*.jmc"];
+dyn globals = {
+    player: "padej.displayLib.script.api.PlayerAPI",
+    screen: "padej.displayLib.script.api.ScreenAPI",
+    storage: "padej.displayLib.script.api.StorageAPI",
+    timer: "padej.displayLib.script.api.TimerAPI",
+    log: "padej.displayLib.script.api.LogAPI",
+};
+String hooks = "padej.displayLib.script.api.ScreenHooks";   // onOpen, onClose(reason)

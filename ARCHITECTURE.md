@@ -10,7 +10,7 @@
 | # | Тема | Решение |
 |---|---|---|
 | 1 | Арена | **Публичный экран** DisplayLib (`openPublicScreen`, `persistent = true`) у голограммы. Один экран на всех, кнопки «Играть» и «Выйти» видны всем рядом, кликает игрок. |
-| 2 | Файлы экрана | Если `plugins/DisplayLib/screens/wordbomb_arena.jmc` **нет** — создаём из ресурсов плагина. Если **есть** — только читаем, сервер может менять разметку как хочет. |
+| 2 | Файлы экрана | Свои файлы DisplayLib — в папке WordBomb: `plugins/WordBomb/{screens,scripts,particles}` и `scripts.jma` (набор содержимого DisplayLib, `ContentPacks.register`). Если файла **нет** — создаём из ресурсов плагина (или переносим из `plugins/DisplayLib/...`, где он лежал раньше). Если **есть** — только читаем, сервер может менять разметку как хочет. |
 | 3 | Разделение | **Логика плагина — Java.** **Логика экрана — `.jmp`**, привязан к `.jmc`. Скрипт экрана вызывает Java-методы плагина, Java обновляет экран через функции скрипта. |
 | 4 | Баги | Чиним сразу в recode (список в §9). |
 | 5 | Хранилище | **SQLite** вместо txt-файлов (обоснование в §6). |
@@ -271,9 +271,16 @@ public record Messages(
 ### Файлы
 | Файл | Кто создаёт | Кто правит |
 |---|---|---|
-| `plugins/DisplayLib/screens/wordbomb_arena.jmc` | WordBomb — **только если файла нет** | сервер |
-| `plugins/DisplayLib/scripts/wordbomb_arena.jmp` | WordBomb — **только если файла нет** | сервер |
-| `plugins/DisplayLib/policies/wordbomb.jma` | WordBomb — **только если файла нет** (ресурс плагина) | сервер может расширять белый список |
+| `plugins/WordBomb/screens/wordbomb_*.jmc` | WordBomb — **только если файла нет** | сервер |
+| `plugins/WordBomb/scripts/wordbomb_*.jmp` | WordBomb — **только если файла нет** | сервер |
+| `plugins/WordBomb/particles/wordbomb_*.jmc` | WordBomb — **только если файла нет** | сервер |
+| `plugins/WordBomb/scripts.jma` | DisplayLib — копия политики по умолчанию, **только если файла нет** | сервер может расширять белый список |
+
+Папка WordBomb — набор содержимого DisplayLib (`ContentPacks.register(plugin)` в `arena/PackFiles`): DisplayLib сам
+загружает из неё экраны и частицы, следит за `screens/` (hot reload), скрипты экранов ищет только в её `scripts/`
+и выполняет под её `scripts.jma`, а не под политикой DisplayLib. Файл, оставшийся в `plugins/DisplayLib/...` от
+прежних версий, при запуске переносится в папку WordBomb (с правками сервера). Для редакторов Jumper в jar лежит
+`META-INF/jumper/host.jmc` (хост `WordBomb`, глобалы экранов DisplayLib).
 
 Ресурсы плагина: `examples/wordbomb/screens/wordbomb_arena.jmc` и `examples/wordbomb/scripts/wordbomb_arena.jmp`.
 
@@ -284,7 +291,6 @@ String screenType = "PUBLIC";
 int tickRate = 10;
 double interactionRadius = 8;
 String script = "wordbomb_arena.jmp";
-String policy = "wordbomb.jma";      // политика доступа скрипта: файл в plugins/DisplayLib/policies/
 dyn background = { color: [10, 10, 10], alpha: 200, scale: [12, 6, 1], anchor: "CENTER" };
 
 dyn widgets = [
@@ -328,18 +334,17 @@ void render(String state, int players, int seconds) {
 
 ### Политика доступа: каждый плагин задаёт своим скриптам свою
 
-- Политики лежат в `plugins/DisplayLib/policies/<имя>.jma`. У каждого плагина свой файл, WordBomb поставляет `wordbomb.jma` (создаётся, если файла нет).
-- Экран сам называет свою политику полем `policy` в `.jmc`. Скрипт этого экрана выполняется только под ней. Если поля нет, берётся `policies/default.jma` (бывший `scripts.jma`).
-- Политика конкретного экрана не видит белых списков других плагинов: скрипт WordBomb не получает доступ к API, разрешённому другому плагину, и наоборот.
+- Сделано в DisplayLib через наборы содержимого: у каждой папки-набора свой `scripts.jma` в корне. Скрипты экранов
+  WordBomb выполняются под `plugins/WordBomb/scripts.jma`, политика DisplayLib на них не действует.
+- Политика одного набора не видит белых списков других: скрипт WordBomb не получает доступ к API, разрешённому
+  другому плагину, и наоборот.
 
 ```java
-// plugins/DisplayLib/policies/wordbomb.jma (ресурс WordBomb, создаётся, если файла нет)
+// plugins/WordBomb/scripts.jma - чтобы открыть скриптам API плагина, дописать:
 Policy.allowClass("padej.wordbomb.bukkit.api.ArenaApi");
 ```
 
-- Сервер может дополнять любой `.jma` своими правилами.
-- Плагин при старте проверяет, что его политика существует и содержит правило для `ArenaApi`, и пишет предупреждение в лог, если нет.
-- DisplayLib должен поддерживать поле `policy` и загрузку политик из папки `policies/` (§14).
+- Сервер может дополнять `.jma` своими правилами; `/displaylib reload` перечитывает политики всех наборов.
 
 ## 9. Игровые баги, которые исправляем в recode
 
@@ -454,7 +459,7 @@ Bukkit-слой проверяем вручную на тестовом серв
 | Потоки | Чат: нормализация + `DictionaryRepo.contains` в async-потоке `AsyncChatEvent`, ход - через `runTask`. Команды и запись побед - поток `WordBomb DB` (`bukkit/Async`), ответ игроку - в главном потоке. Один `Connection` SQLite под блокировкой (`storage/Database`). |
 | Конфиг | `config.jmc` содержит дополнительно `wordHeight`, `wordScale`, `freezePlayers`, `legacyDataFolder`. `messages.jmc` - record `Messages` (~75 строк), `&`-коды, плейсхолдеры `{player}` и т.д. |
 | Заморозка | `PlayerFreezer` сохраняет исходные значения атрибутов и возвращает их (не 0.1/0.42). Наблюдателям возвращается прежний игровой режим. |
-| Экран | `plugins/DisplayLib/screens/wordbomb_arena.jmc`, `scripts/wordbomb_arena.jmp`, `particles/wordbomb_skull.jmc` создаются из ресурсов `examples/wordbomb/...` только если файлов нет. Экран ставится на первом тике сервера (плагин грузится на `STARTUP`, миры позже), только если DisplayLib ещё не восстановил persistent-экран с этим id. `/wb config setHologram` без аргументов ставит экран в точку админа лицом к нему. |
+| Экран | `plugins/WordBomb/screens/wordbomb_arena.jmc`, `scripts/wordbomb_arena.jmp`, `particles/wordbomb_skull.jmc` создаются из ресурсов `examples/wordbomb/...` только если файлов нет. Экран ставится на первом тике сервера (плагин грузится на `STARTUP`, миры позже), только если DisplayLib ещё не восстановил persistent-экран с этим id. `/wb config setHologram` без аргументов ставит экран в точку админа лицом к нему. |
 | Слово в центре | `effects/WordDisplay`: `TextDisplay` с градиентом `#FFCC45 → #FF6545`, при смене - `Particles.shatter(...).effect("letters").hold(0)`. Нужен пример `letters.jmc` DisplayLib (`/displaylib examples`); без него слово просто меняется, в лог - предупреждение. |
 | Экран настроек | `wordbomb_config` (приватный, `/wb config` без аргументов, `wordbomb.eventer`): значения настроек - кнопки с `id = ключ config.jmc`. Java пишет значения в виджеты (`ConfigScreen`), скрипт превращает клики в команды: значение → `player.input(...)` → `/wb config set <ключ> <значение>` (проверка до записи в файл, `ConfigLoader.setValue`). Модерация словаря - отдельный экран `wordbomb_mod` (ниже). Нужен DisplayLib с `player.input`. |
 | Экран модерации | `wordbomb_mod` (приватный, `/wb mod`, `wordbomb.eventer`, morph включён): вкладки предложения/жалобы, 8 строк на страницу, ◀ ▶. Java (`ModerationScreen`) кладёт страницу в `storage` игрока DisplayLib (`wordbomb_mod.kind/page/pages/total/row.N.word/votes`) и открывает экран заново (`switchScreen` на тот же id → morph от старых слов к новым; нужен DisplayLib от 22.10.2026, где цель morph - состояние после `onOpen`). Скрипт `wordbomb_mod.jmp` в `onOpen` читает storage, клики превращает в `/wb mod tab|page` и `/wb accept|block`. После `accept`/`block` экран перерисовывается. |
