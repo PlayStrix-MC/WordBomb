@@ -1,8 +1,7 @@
 // wordbomb_config: приватный экран настроек WordBomb, открывается командой /wb config (право wordbomb.eventer).
 // Файл создан плагином WordBomb один раз - дальше его правит сервер (редактор DisplayLib), плагин его не перезаписывает.
 // Значение-кнопка: id = ключ в config.jmc, текст пишет плагин; клик -> player.input(...) -> /wb config set <ключ> <значение>.
-// Виджеты offer_1..5 / report_1..5 (клик = /wb accept | /wb block, слово в tooltip) необязательны: плагин заполняет их,
-// только если они есть. Id виджетов менять нельзя, остальное - можно.
+// Id виджетов менять нельзя, остальное - можно.
 
 String id = "wordbomb_config";
 String screenType = "PRIVATE";
