@@ -1,67 +1,205 @@
 // wordbomb_config: приватный экран настроек WordBomb, открывается командой /wb config (право wordbomb.eventer).
-// Файл создан плагином WordBomb один раз - дальше его правит сервер, плагин его не перезаписывает.
-//
-// Слева - настройки: надпись (статичная, здесь в файле) и значение-кнопка, id которой = ключ в config.jmc.
-// Значения в кнопки пишет плагин; клик по значению -> player.input(...) в скрипте -> /wb config set <ключ> <значение>.
-// Справа - топ предложений (offer_1..5, клик = /wb accept) и жалоб (report_1..5, клик = /wb block):
-// текст и tooltip (само слово) пишет плагин. Id виджетов менять нельзя, остальное - можно.
+// Файл создан плагином WordBomb один раз - дальше его правит сервер (редактор DisplayLib), плагин его не перезаписывает.
+// Значение-кнопка: id = ключ в config.jmc, текст пишет плагин; клик -> player.input(...) -> /wb config set <ключ> <значение>.
+// Виджеты offer_1..5 / report_1..5 (клик = /wb accept | /wb block, слово в tooltip) необязательны: плагин заполняет их,
+// только если они есть. Id виджетов менять нельзя, остальное - можно.
 
 String id = "wordbomb_config";
 String screenType = "PRIVATE";
 int tickRate = 4;
 double interactionRadius = 6;
 double closeDistance = 10;
+
+dyn background = { color: [10, 10, 10], alpha: 210, scale: [20, 11.25, 1.25], anchor: "CENTER" };
+
 String script = "wordbomb_config.jmp";
 
-dyn background = { color: [10, 10, 10], alpha: 210, scale: [16, 9, 1], anchor: "CENTER" };
-
-dyn label = "#A1EFFF";
-dyn rowScale = [0.45, 0.45, 0.45];
-dyn rowTol = [0.28, 0.07];
-
 dyn widgets = [
-    { id: "title", text: [ { text: "Word", color: "#FFCC45" }, { text: "Bomb", color: "#FF6545" }, { text: " · настройки", color: "white" } ],
-      position: [0, 1.85, -0.01], scale: [0.7, 0.7, 0.7], tolerance: [0, 0], backgroundAlpha: 0 },
-
-    // --- настройки (ключ config.jmc = id кнопки значения)
-    { id: "l_countdownSeconds", text: [ { text: "Отсчёт до старта, с", color: label } ], position: [-4.4, 1.2, -0.01], scale: rowScale, tolerance: [0, 0], backgroundAlpha: 0 },
-    { id: "countdownSeconds", text: "20", position: [-1.9, 1.2, -0.01], scale: rowScale, tolerance: rowTol, backgroundColor: [0, 139, 241], backgroundAlpha: 160, tooltip: "Нажмите и введите значение в чат", onClick: "edit" },
-
-    { id: "l_turnBaseSeconds", text: [ { text: "База хода, с", color: label } ], position: [-4.4, 0.75, -0.01], scale: rowScale, tolerance: [0, 0], backgroundAlpha: 0 },
-    { id: "turnBaseSeconds", text: "20", position: [-1.9, 0.75, -0.01], scale: rowScale, tolerance: rowTol, backgroundColor: [0, 139, 241], backgroundAlpha: 160, tooltip: "Нажмите и введите значение в чат", onClick: "edit" },
-
-    { id: "l_minTurnSeconds", text: [ { text: "Минимум хода, с", color: label } ], position: [-4.4, 0.3, -0.01], scale: rowScale, tolerance: [0, 0], backgroundAlpha: 0 },
-    { id: "minTurnSeconds", text: "5", position: [-1.9, 0.3, -0.01], scale: rowScale, tolerance: rowTol, backgroundColor: [0, 139, 241], backgroundAlpha: 160, tooltip: "Нажмите и введите значение в чат", onClick: "edit" },
-
-    { id: "l_lastSecondsWarning", text: [ { text: "Предупреждать за, с", color: label } ], position: [-4.4, -0.15, -0.01], scale: rowScale, tolerance: [0, 0], backgroundAlpha: 0 },
-    { id: "lastSecondsWarning", text: "5", position: [-1.9, -0.15, -0.01], scale: rowScale, tolerance: rowTol, backgroundColor: [0, 139, 241], backgroundAlpha: 160, tooltip: "Нажмите и введите значение в чат", onClick: "edit" },
-
-    { id: "l_minPlayers", text: [ { text: "Минимум игроков", color: label } ], position: [-4.4, -0.6, -0.01], scale: rowScale, tolerance: [0, 0], backgroundAlpha: 0 },
-    { id: "minPlayers", text: "2", position: [-1.9, -0.6, -0.01], scale: rowScale, tolerance: rowTol, backgroundColor: [0, 139, 241], backgroundAlpha: 160, tooltip: "Нажмите и введите значение в чат", onClick: "edit" },
-
-    { id: "l_twoLetterChance", text: [ { text: "Шанс 2 букв (0..1)", color: label } ], position: [-4.4, -1.05, -0.01], scale: rowScale, tolerance: [0, 0], backgroundAlpha: 0 },
-    { id: "twoLetterChance", text: "0.9", position: [-1.9, -1.05, -0.01], scale: rowScale, tolerance: rowTol, backgroundColor: [0, 139, 241], backgroundAlpha: 160, tooltip: "Нажмите и введите значение в чат", onClick: "edit" },
-
-    { id: "l_zoneRadius", text: [ { text: "Радиус зоны", color: label } ], position: [-4.4, -1.5, -0.01], scale: rowScale, tolerance: [0, 0], backgroundAlpha: 0 },
-    { id: "zoneRadius", text: "50", position: [-1.9, -1.5, -0.01], scale: rowScale, tolerance: rowTol, backgroundColor: [0, 139, 241], backgroundAlpha: 160, tooltip: "Нажмите и введите значение в чат", onClick: "edit" },
-
-    { id: "l_circleRadius", text: [ { text: "Радиус круга", color: label } ], position: [-4.4, -1.95, -0.01], scale: rowScale, tolerance: [0, 0], backgroundAlpha: 0 },
-    { id: "circleRadius", text: "10", position: [-1.9, -1.95, -0.01], scale: rowScale, tolerance: rowTol, backgroundColor: [0, 139, 241], backgroundAlpha: 160, tooltip: "Нажмите и введите значение в чат", onClick: "edit" },
-
-    // --- модерация словаря
-    { id: "h_offers", text: [ { text: "Предложения", color: "#FFCC45" } ], position: [2.6, 1.2, -0.01], scale: [0.5, 0.5, 0.5], tolerance: [0, 0], backgroundAlpha: 0 },
-    { id: "offer_1", text: "-", position: [2.6, 0.8, -0.01], scale: rowScale, tolerance: [0.9, 0.07], backgroundColor: [0, 110, 40], backgroundAlpha: 140, onClick: "accept" },
-    { id: "offer_2", text: "-", position: [2.6, 0.45, -0.01], scale: rowScale, tolerance: [0.9, 0.07], backgroundColor: [0, 110, 40], backgroundAlpha: 140, onClick: "accept" },
-    { id: "offer_3", text: "-", position: [2.6, 0.1, -0.01], scale: rowScale, tolerance: [0.9, 0.07], backgroundColor: [0, 110, 40], backgroundAlpha: 140, onClick: "accept" },
-    { id: "offer_4", text: "-", position: [2.6, -0.25, -0.01], scale: rowScale, tolerance: [0.9, 0.07], backgroundColor: [0, 110, 40], backgroundAlpha: 140, onClick: "accept" },
-    { id: "offer_5", text: "-", position: [2.6, -0.6, -0.01], scale: rowScale, tolerance: [0.9, 0.07], backgroundColor: [0, 110, 40], backgroundAlpha: 140, onClick: "accept" },
-
-    { id: "h_reports", text: [ { text: "Жалобы", color: "#FF6545" } ], position: [2.6, -1.05, -0.01], scale: [0.5, 0.5, 0.5], tolerance: [0, 0], backgroundAlpha: 0 },
-    { id: "report_1", text: "-", position: [2.6, -1.45, -0.01], scale: rowScale, tolerance: [0.9, 0.07], backgroundColor: [140, 0, 20], backgroundAlpha: 140, onClick: "block" },
-    { id: "report_2", text: "-", position: [2.6, -1.8, -0.01], scale: rowScale, tolerance: [0.9, 0.07], backgroundColor: [140, 0, 20], backgroundAlpha: 140, onClick: "block" },
-    { id: "report_3", text: "-", position: [2.6, -2.15, -0.01], scale: rowScale, tolerance: [0.9, 0.07], backgroundColor: [140, 0, 20], backgroundAlpha: 140, onClick: "block" },
-    { id: "report_4", text: "-", position: [2.6, -2.5, -0.01], scale: rowScale, tolerance: [0.9, 0.07], backgroundColor: [140, 0, 20], backgroundAlpha: 140, onClick: "block" },
-    { id: "report_5", text: "-", position: [2.6, -2.85, -0.01], scale: rowScale, tolerance: [0.9, 0.07], backgroundColor: [140, 0, 20], backgroundAlpha: 140, onClick: "block" },
-
-    { id: "close", text: "Закрыть", position: [-3.2, -2.7, -0.01], scale: [0.5, 0.5, 0.5], tolerance: [0.35, 0.08], backgroundColor: [60, 60, 60], backgroundAlpha: 200, onClick: "close" },
+    {
+        id: "title",
+        type: "TEXT_BUTTON",
+        text: [ { text: "Word", color: "#FFCC45" }, { text: "Bomb", color: "#FF6545" }, { text: " · настройки", color: "white" } ],
+        position: [0, 1.1413, -0.0103],
+        scale: [0.875, 0.875, 0.875],
+        tolerance: [0, 0],
+    },
+    {
+        id: "l_countdownSeconds",
+        type: "TEXT_BUTTON",
+        text: [ { text: "Отсчёт до старта, с", color: "#A1EFFF" } ],
+        position: [-0.468, 0.846, -0.01],
+        scale: [0.5625, 0.5625, 0.5625],
+        tolerance: [0, 0],
+    },
+    {
+        id: "countdownSeconds",
+        type: "TEXT_BUTTON",
+        text: "20",
+        hoveredText: "___",
+        position: [0.95, 0.846, -0.01],
+        scale: [0.5625, 0.5625, 0.5625],
+        tolerance: [0.15, 0.0875],
+        backgroundColor: [0, 139, 241],
+        backgroundAlpha: 160,
+        tooltip: "Нажмите и введите значение в чат",
+        onClick: { function: "edit" },
+    },
+    {
+        id: "l_turnBaseSeconds",
+        type: "TEXT_BUTTON",
+        text: [ { text: "База хода, с", color: "#A1EFFF" } ],
+        position: [-0.748, 0.56229, -0.01],
+        scale: [0.5625, 0.5625, 0.5625],
+        tolerance: [0, 0],
+    },
+    {
+        id: "turnBaseSeconds",
+        type: "TEXT_BUTTON",
+        text: "20",
+        hoveredText: "___",
+        position: [0.95, 0.56229, -0.01],
+        scale: [0.5625, 0.5625, 0.5625],
+        tolerance: [0.15, 0.0875],
+        backgroundColor: [0, 139, 241],
+        backgroundAlpha: 160,
+        tooltip: "Нажмите и введите значение в чат",
+        onClick: { function: "edit" },
+    },
+    {
+        id: "l_minTurnSeconds",
+        type: "TEXT_BUTTON",
+        text: [ { text: "Минимум хода, с", color: "#A1EFFF" } ],
+        position: [-0.623, 0.27858, -0.01],
+        scale: [0.5625, 0.5625, 0.5625],
+        tolerance: [0, 0],
+    },
+    {
+        id: "minTurnSeconds",
+        type: "TEXT_BUTTON",
+        text: "5",
+        hoveredText: "___",
+        position: [0.95, 0.27858, -0.01],
+        scale: [0.5625, 0.5625, 0.5625],
+        tolerance: [0.15, 0.0875],
+        backgroundColor: [0, 139, 241],
+        backgroundAlpha: 160,
+        tooltip: "Нажмите и введите значение в чат",
+        onClick: { function: "edit" },
+    },
+    {
+        id: "l_lastSecondsWarning",
+        type: "TEXT_BUTTON",
+        text: [ { text: "Предупреждать за, с", color: "#A1EFFF" } ],
+        position: [-0.446, -0.00513, -0.01],
+        scale: [0.5625, 0.5625, 0.5625],
+        tolerance: [0, 0],
+    },
+    {
+        id: "lastSecondsWarning",
+        type: "TEXT_BUTTON",
+        text: "5",
+        hoveredText: "___",
+        position: [0.95, -0.00513, -0.0103],
+        scale: [0.5625, 0.5625, 0.5625],
+        tolerance: [0.15, 0.0875],
+        backgroundColor: [0, 139, 241],
+        backgroundAlpha: 160,
+        tooltip: "Нажмите и введите значение в чат",
+        onClick: { function: "edit" },
+    },
+    {
+        id: "l_minPlayers",
+        type: "TEXT_BUTTON",
+        text: [ { text: "Минимум игроков", color: "#A1EFFF" } ],
+        position: [-0.6, -0.28884, -0.01],
+        scale: [0.5625, 0.5625, 0.5625],
+        tolerance: [0, 0],
+    },
+    {
+        id: "minPlayers",
+        type: "TEXT_BUTTON",
+        text: "2",
+        hoveredText: "___",
+        position: [0.95, -0.28884, -0.0103],
+        scale: [0.5625, 0.5625, 0.5625],
+        tolerance: [0.15, 0.0875],
+        backgroundColor: [0, 139, 241],
+        backgroundAlpha: 160,
+        tooltip: "Нажмите и введите значение в чат",
+        onClick: { function: "edit" },
+    },
+    {
+        id: "l_twoLetterChance",
+        type: "TEXT_BUTTON",
+        text: [ { text: "Шанс 2 букв (0..1)", color: "#A1EFFF" } ],
+        position: [-0.565, -0.57255, -0.0103],
+        scale: [0.5625, 0.5625, 0.5625],
+        tolerance: [0, 0],
+    },
+    {
+        id: "twoLetterChance",
+        type: "TEXT_BUTTON",
+        text: "0.9",
+        hoveredText: "___",
+        position: [0.95, -0.57255, -0.0103],
+        scale: [0.5625, 0.5625, 0.5625],
+        tolerance: [0.15, 0.0875],
+        backgroundColor: [0, 139, 241],
+        backgroundAlpha: 160,
+        tooltip: "Нажмите и введите значение в чат",
+        onClick: { function: "edit" },
+    },
+    {
+        id: "l_zoneRadius",
+        type: "TEXT_BUTTON",
+        text: [ { text: "Радиус зоны", color: "#A1EFFF" } ],
+        position: [-0.741, -0.85626, -0.0103],
+        scale: [0.5625, 0.5625, 0.5625],
+        tolerance: [0, 0],
+    },
+    {
+        id: "zoneRadius",
+        type: "TEXT_BUTTON",
+        text: "50",
+        hoveredText: "___",
+        position: [0.95, -0.85626, -0.0103],
+        scale: [0.5625, 0.5625, 0.5625],
+        tolerance: [0.15, 0.0875],
+        backgroundColor: [0, 139, 241],
+        backgroundAlpha: 160,
+        tooltip: "Нажмите и введите значение в чат",
+        onClick: { function: "edit" },
+    },
+    {
+        id: "l_circleRadius",
+        type: "TEXT_BUTTON",
+        text: [ { text: "Радиус круга", color: "#A1EFFF" } ],
+        position: [-0.72, -1.14, -0.0103],
+        scale: [0.5625, 0.5625, 0.5625],
+        tolerance: [0, 0],
+    },
+    {
+        id: "circleRadius",
+        type: "TEXT_BUTTON",
+        text: "10",
+        hoveredText: "___",
+        position: [0.95, -1.14, -0.0103],
+        scale: [0.5625, 0.5625, 0.5625],
+        tolerance: [0.15, 0.0875],
+        backgroundColor: [0, 139, 241],
+        backgroundAlpha: 160,
+        tooltip: "Нажмите и введите значение в чат",
+        onClick: { function: "edit" },
+    },
+    {
+        id: "close",
+        type: "TEXT_BUTTON",
+        text: "Закрыть",
+        position: [-0.008, -1.35, -0.01],
+        scale: [0.625, 0.625, 0.625],
+        tolerance: [0.4375, 0.1],
+        backgroundColor: [60, 60, 60],
+        backgroundAlpha: 200,
+        onClick: { close: true },
+    },
 ];
