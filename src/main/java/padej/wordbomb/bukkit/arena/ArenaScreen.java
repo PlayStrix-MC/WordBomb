@@ -1,6 +1,7 @@
 package padej.wordbomb.bukkit.arena;
 
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -207,15 +208,27 @@ public final class ArenaScreen implements Listener {
         String id = event.getWidgetId();
         if (id == null) return;
         Player player = event.getPlayer();
+        boolean ok;
         switch (id) {
-            case WIDGET_JOIN -> plugin.api().join(player);
-            case WIDGET_LEAVE -> plugin.api().leave(player);
-            case WIDGET_START -> plugin.api().start(player);
+            case WIDGET_JOIN -> ok = plugin.api().join(player);
+            case WIDGET_LEAVE -> ok = plugin.api().leave(player);
+            case WIDGET_START -> ok = plugin.api().start(player);
             default -> {
                 return;
             }
         }
+        // DisplayLib не играет clickSound на публичных экранах (клик не доходит до виджета), поэтому звук - здесь
+        clickSound(player, ok);
         // Java уже обработала клик: скрипту экрана делать нечего
         event.setCancelled(true);
+    }
+
+    /** Щелчок кнопки; при отказе (уже в игре, не в очереди, игра идёт) - низкий «бас». */
+    private static void clickSound(Player player, boolean ok) {
+        if (ok) {
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.6f, 1f);
+        } else {
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.6f);
+        }
     }
 }
