@@ -74,9 +74,9 @@ public final class ArenaScreen implements Listener {
             particlesMissing |= Particles.effect(effect) == null;
         }
 
-        if (screenCreated || !displayLib().getScreenRegistry().hasScreen(SCREEN_ID)) {
-            displayLib().getScreenRegistry().reloadScreen(SCREEN_ID);
-        }
+        // всегда перечитываем свой файл: если в screens/ есть другой файл с тем же id, иначе победит он
+        displayLib().getScreenRegistry().reloadScreen(SCREEN_ID);
+        if (screenCreated) plugin.getLogger().info("Экран " + SCREEN_ID + " создан из ресурсов плагина.");
         if (particlesChanged || particlesMissing) {
             displayLib().getParticleRegistry().loadAll();
         }

@@ -49,9 +49,9 @@ public final class ConfigScreen {
         Path dir = displayLib().getDataFolder().toPath();
         boolean created = copyIfMissing(RES_SCREEN, dir.resolve("screens").resolve(SCREEN_ID + ".jmc"));
         copyIfMissing(RES_SCRIPT, dir.resolve("scripts").resolve(SCREEN_ID + ".jmp"));
-        if (created || !displayLib().getScreenRegistry().hasScreen(SCREEN_ID)) {
-            displayLib().getScreenRegistry().reloadScreen(SCREEN_ID);
-        }
+        // всегда перечитываем свой файл: если в screens/ есть другой файл с тем же id, иначе победит он
+        displayLib().getScreenRegistry().reloadScreen(SCREEN_ID);
+        if (created) plugin.getLogger().info("Экран " + SCREEN_ID + " создан из ресурсов плагина.");
     }
 
     private boolean copyIfMissing(String resource, Path target) {
