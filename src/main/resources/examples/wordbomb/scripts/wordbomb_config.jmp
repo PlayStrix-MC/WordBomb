@@ -1,34 +1,68 @@
 // wordbomb_config.jmp: скрипт экрана настроек WordBomb (/wb config). Создан плагином один раз, дальше правит сервер.
 //
-// Скрипт не знает про Java: значения в виджеты пишет плагин, а действия уходят командами /wb от имени игрока
-// (у открывшего экран есть право wordbomb.eventer). После каждой команды плагин сам перерисовывает экран.
-//
-//   edit(widget, player)   - клик по значению: ждём ввод в чат (player.input), затем /wb config set <id> <текст>
-//   accept(widget, player) - клик по предложению: /wb accept <слово>; слово лежит в tooltip виджета
-//   block(widget, player)  - клик по жалобе: /wb block <слово>
-//
-// Нужен DisplayLib с player.input (сборка от 22.10.2026 и новее).
+// Данные страницы кладёт в storage игрока плагин (ключи wordbomb_config.*), а экран открывает заново - так работает
+// morph: onOpen читает storage и пишет подписи/значения в строки, анимация идёт между страницами.
+//   wordbomb_config.page / pages        - текущая страница (с нуля) и сколько всего
+//   wordbomb_config.row.N.key/label/value - строка N (1..8): ключ config.jmc, подпись, текущее значение; пусто - строки нет
+// Действия - командами /wb от имени игрока (право wordbomb.eventer); плагин сам обновляет данные и переоткрывает экран:
+//   значение value_N -> player.input(...) -> /wb config set <ключ> <текст>  («-» - отмена)
+//   ◀ ▶             -> /wb config page prev|next
 
+int rows = 8;
+
+int page() { return storage.get("wordbomb_config.page", 0); }
+int pages() { return storage.get("wordbomb_config.pages", 1); }
+
+void onOpen() {
+    for (int i = 1; i <= rows; i++) {
+        String key = storage.get("wordbomb_config.row." + i + ".key", "");
+        dyn label = screen.widget("label_" + i);
+        dyn value = screen.widget("value_" + i);
+        if (key == "") {
+            label.text("");
+            value.text("");
+            value.tooltip("");
+            value.bgAlpha(0);
+            value.enabled(false);
+        } else {
+            label.text([ { text: storage.get("wordbomb_config.row." + i + ".label", key), color: "#A1EFFF" } ]);
+            value.text(storage.get("wordbomb_config.row." + i + ".value", "?"));
+            value.tooltip("Нажмите и введите значение в чат");
+            value.bgAlpha(160);
+            value.enabled(true);
+        }
+    }
+    screen.widget("page").text("Страница " + (page() + 1) + " из " + pages());
+    screen.widget("prev").enabled(page() > 0);
+    screen.widget("next").enabled(page() < pages() - 1);
+}
+
+// клик по значению value_N: ждём ввод в чат, затем команда
 void edit(dyn widget, dyn player) {
-    String key = widget.id();
-    player.input([ { text: "Новое значение ", color: "gray" }, { text: key, color: "gold" },
-                   { text: " (сейчас " + widget.text() + "), «-» - отмена:", color: "gray" } ], 600, text -> {
+    String id = widget.id();
+    String n = id.substring(6);
+    String key = storage.get("wordbomb_config.row." + n + ".key", "");
+    if (key == "") return;
+    String label = storage.get("wordbomb_config.row." + n + ".label", key);
+    String current = storage.get("wordbomb_config.row." + n + ".value", "?");
+    player.input([ { text: "Новое значение ", color: "gray" }, { text: label, color: "gold" },
+                   { text: " (сейчас " + current + "), «-» - отмена:", color: "gray" } ], 600, text -> {
         if (text == "-") {
-            player.message([ { text: "Ввод отменён, ", color: "gray" }, { text: key, color: "gold" }, { text: " не изменён.", color: "gray" } ]);
+            player.message([ { text: "Ввод отменён, ", color: "gray" }, { text: label, color: "gold" }, { text: " не изменён.", color: "gray" } ]);
             return;
         }
         player.command("wb config set " + key + " " + text);
     });
 }
 
-void accept(dyn widget, dyn player) {
-    String word = widget.tooltip();
-    if (word == null || word == "") return;
-    player.command("wb accept " + word);
+void prev(dyn widget, dyn player) {
+    if (page() <= 0) return;
+    player.sound("item.book.page_turn");
+    player.command("wb config page prev");
 }
 
-void block(dyn widget, dyn player) {
-    String word = widget.tooltip();
-    if (word == null || word == "") return;
-    player.command("wb block " + word);
+void next(dyn widget, dyn player) {
+    if (page() >= pages() - 1) return;
+    player.sound("item.book.page_turn");
+    player.command("wb config page next");
 }

@@ -2,6 +2,8 @@ package padej.wordbomb.config;
 
 import me.padej.jumper.interp.Config;
 
+import java.util.Map;
+
 /**
  * Все тексты плагина ({@code plugins/WordBomb/messages.jmc}). Цвета - {@code &}-коды, плейсхолдеры в фигурных
  * скобках подставляются в коде ({@link Text#fill}). В Java строк для игрока нет - только здесь.
@@ -102,7 +104,11 @@ public record Messages(
 
         // --- PlaceholderAPI
         String papiTopLine,
-        String papiNoData) {
+        String papiNoData,
+
+        // --- экран настроек: подписи ключей config.jmc (ключ без подписи показывается своим именем)
+        @Config.Comment("Labels of config.jmc keys on the /wb config screen")
+        Map<String, String> configLabels) {
 
     public static final Messages DEFAULTS = new Messages(
             "&6[WordBomb] &f",
@@ -188,5 +194,29 @@ public record Messages(
             "⌚ -",
 
             "&6{player} &7- &a{wins}",
-            "&7Нет данных");
+            "&7Нет данных",
+
+            defaultConfigLabels());
+
+    /** Подписи ключей config.jmc в порядке экрана настроек. */
+    private static Map<String, String> defaultConfigLabels() {
+        Map<String, String> m = new java.util.LinkedHashMap<>();
+        m.put("countdownSeconds", "Отсчёт до старта, с");
+        m.put("turnBaseSeconds", "База хода, с");
+        m.put("minTurnSeconds", "Минимум хода, с");
+        m.put("lastSecondsWarning", "Предупреждать за, с");
+        m.put("minPlayers", "Минимум игроков");
+        m.put("twoLetterChance", "Шанс 2 букв (0..1)");
+        m.put("templateHistory", "Память шаблонов");
+        m.put("templateAttempts", "Попыток шаблона");
+        m.put("zoneRadius", "Радиус зоны");
+        m.put("circleRadius", "Радиус круга");
+        m.put("spectatorLeash", "Поводок зрителя");
+        m.put("spectatorLift", "Высота зрителя");
+        m.put("wordHeight", "Высота слова");
+        m.put("wordScale", "Масштаб слова");
+        m.put("freezePlayers", "Заморозка игроков");
+        m.put("eliminationHints", "Подсказок при выбывании");
+        return m;
+    }
 }

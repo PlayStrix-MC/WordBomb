@@ -37,8 +37,9 @@ public final class WbTabCompleter implements TabCompleter {
     }
 
     private List<String> config(String[] args) {
-        if (args.length == 2) return filter(List.of("set", "setCenter", "setHologram"), args[1]);
-        if (args.length == 3 && args[1].equalsIgnoreCase("set")) return filter(padej.wordbomb.bukkit.arena.ConfigScreen.keys(), args[2]);
+        if (args.length == 2) return filter(List.of("set", "page", "setCenter", "setHologram"), args[1]);
+        if (args.length == 3 && args[1].equalsIgnoreCase("page")) return filter(List.of("next", "prev"), args[2]);
+        if (args.length == 3 && args[1].equalsIgnoreCase("set")) return filter(padej.wordbomb.bukkit.arena.ConfigScreen.editableKeys(), args[2]);
         return List.of();
     }
 

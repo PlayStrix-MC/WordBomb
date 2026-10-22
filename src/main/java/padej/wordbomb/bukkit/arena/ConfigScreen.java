@@ -1,38 +1,35 @@
 package padej.wordbomb.bukkit.arena;
 
 import org.bukkit.entity.Player;
-import padej.displayLib.DisplayLib;
-import padej.displayLib.script.api.WidgetAPI;
+import padej.displayLib.script.api.StorageAPI;
 import padej.displayLib.ui.ScreenInstance;
 import padej.displayLib.ui.UIManager;
-import padej.displayLib.ui.widgets.Widget;
 import padej.wordbomb.bukkit.WordBombPlugin;
 import padej.wordbomb.config.ConfigLoader;
 import padej.wordbomb.config.WordBombConfig;
-import padej.wordbomb.storage.VoteRepo;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.RecordComponent;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.UUID;
+import java.util.Map;
 
 /**
- * Приватный экран настроек ({@code wordbomb_config}, команда {@code /wb config}): значения настроек - кнопки с
- * {@code id = ключ config.jmc}, справа топ предложений и жалоб. Java пишет значения и списки в виджеты,
- * скрипт экрана ({@code wordbomb_config.jmp}) превращает клики и ввод из чата в команды {@code /wb}.
+ * Приватный экран настроек ({@code wordbomb_config}, команда {@code /wb config}): страницы по {@value #ROWS} строк
+ * «подпись - значение». Данные страницы Java кладёт в {@code storage} игрока DisplayLib ({@code wordbomb_config.*})
+ * и открывает экран заново: {@code onOpen} скрипта читает их, morph перетекает между страницами. Клик по значению
+ * скрипт превращает в {@code player.input(...)} → {@code /wb config set <ключ> <значение>}, стрелки - в
+ * {@code /wb config page next|prev}. Подписи ключей - {@code messages.jmc → configLabels}.
  */
 public final class ConfigScreen {
 
     public static final String SCREEN_ID = "wordbomb_config";
-    public static final int LIST_SIZE = 5;
+    public static final int ROWS = 8;
 
     private static final String RES_SCREEN = "examples/wordbomb/screens/wordbomb_config.jmc";
     private static final String RES_SCRIPT = "examples/wordbomb/scripts/wordbomb_config.jmp";
+    private static final String KEY = "wordbomb_config.";
 
     private final WordBombPlugin plugin;
 
@@ -40,97 +37,99 @@ public final class ConfigScreen {
         this.plugin = plugin;
     }
 
-    private DisplayLib displayLib() {
-        return (DisplayLib) DisplayLib.getInstance();
-    }
-
-    /** Создать файлы экрана и скрипта в {@code plugins/WordBomb/}, если их нет, и перечитать экран. */
+    /** Создать недостающие файлы в {@code plugins/WordBomb/} (набор содержимого DisplayLib) и перечитать экран. */
     public void installResources() {
         boolean created = PackFiles.install(plugin, RES_SCREEN, "screens", SCREEN_ID + ".jmc");
         PackFiles.install(plugin, RES_SCRIPT, "scripts", SCREEN_ID + ".jmp");
-        // всегда перечитываем свой файл: если в screens/ есть другой файл с тем же id, иначе победит он
         PackFiles.reloadScreen(plugin, SCREEN_ID);
         if (created) plugin.getLogger().info("Экран " + SCREEN_ID + " создан из ресурсов плагина.");
     }
 
-    /** Открыть экран перед игроком (в 2 блоках по взгляду, как {@code /displaylib open}) и заполнить. */
+    // ------------------------------------------------------------------ открытие и листание
+
+    /** {@code /wb config}: открыть на сохранённой странице. */
     public boolean open(Player player) {
-        if (!displayLib().getScreenRegistry().hasScreen(SCREEN_ID)) installResources();
-        if (!UIManager.getInstance().openScreen(player, SCREEN_ID)) return false;
-        refresh(player);
-        return true;
+        return show(player, asInt(storage(player).get(KEY + "page", 0)));
     }
 
-    /** Экран настроек этого игрока или {@code null}, если открыт другой экран / ничего. */
-    private ScreenInstance screenOf(Player player) {
-        ScreenInstance s = UIManager.getInstance().getActiveScreen(player);
-        return s != null && SCREEN_ID.equals(s.getScreenId()) ? s : null;
+    /** {@code /wb config page <next|prev|N>}. */
+    public void page(Player player, String arg) {
+        int page = asInt(storage(player).get(KEY + "page", 0));
+        if (arg == null) return;
+        switch (arg.toLowerCase(Locale.ROOT)) {
+            case "next" -> page++;
+            case "prev" -> page--;
+            default -> {
+                try {
+                    page = Integer.parseInt(arg) - 1;
+                } catch (NumberFormatException e) {
+                    return;
+                }
+            }
+        }
+        show(player, page);
     }
 
-    /** Перерисовать, если у игрока открыт экран настроек (после {@code /wb config set}, {@code accept}, {@code block}). */
+    /** Перерисовать, если у игрока открыт экран настроек (после {@code /wb config set}). */
     public void refreshIfOpen(Player player) {
-        if (player != null && screenOf(player) != null) refresh(player);
+        if (player != null && isOpen(player)) open(player);
     }
 
-    private void refresh(Player player) {
-        ScreenInstance screen = screenOf(player);
-        if (screen == null) return;
-        renderSettings(screen, plugin.config());
-        UUID id = player.getUniqueId();
-        plugin.async().supply(() -> new Lists(plugin.suggestions().top(LIST_SIZE), plugin.reports().top(LIST_SIZE)), lists -> {
-            Player p = org.bukkit.Bukkit.getPlayer(id);
-            ScreenInstance s = p != null ? screenOf(p) : null;
-            if (s == null) return;
-            renderList(s, "offer_", lists.offers());
-            renderList(s, "report_", lists.reports());
-        });
+    private boolean isOpen(Player player) {
+        ScreenInstance s = UIManager.getInstance().getActiveScreen(player);
+        return s != null && SCREEN_ID.equals(s.getScreenId());
     }
 
-    private record Lists(List<VoteRepo.Entry> offers, List<VoteRepo.Entry> reports) {}
-
-    private void renderSettings(ScreenInstance screen, WordBombConfig config) {
-        for (RecordComponent c : WordBombConfig.class.getRecordComponents()) {
-            Widget widget = screen.getWidget(c.getName());
-            if (widget == null) continue;
-            try {
-                Object value = c.getAccessor().invoke(config);
-                setText(widget, c.getName(), format(value));
-            } catch (ReflectiveOperationException e) {
-                plugin.getLogger().fine("config widget " + c.getName() + ": " + e.getMessage());
-            }
-        }
+    /**
+     * Записать страницу в storage игрока и открыть экран: если он уже открыт - {@code switchScreen} на тот же id
+     * даёт morph, иначе обычное открытие перед игроком.
+     */
+    private boolean show(Player player, int requestedPage) {
+        List<String> keys = keys();
+        int pages = Math.max(1, (keys.size() + ROWS - 1) / ROWS);
+        int page = Math.max(0, Math.min(requestedPage, pages - 1));
+        writePage(player, page, pages, keys, plugin.config());
+        if (!displayLibHasScreen()) installResources();
+        return isOpen(player)
+                ? UIManager.getInstance().switchScreen(player, SCREEN_ID)
+                : UIManager.getInstance().openScreen(player, SCREEN_ID);
     }
 
-    private void renderList(ScreenInstance screen, String prefix, List<VoteRepo.Entry> entries) {
-        for (int i = 1; i <= LIST_SIZE; i++) {
-            Widget widget = screen.getWidget(prefix + i);
-            if (widget == null) continue;
-            WidgetAPI api = new WidgetAPI(prefix + i, widget);
-            if (i <= entries.size()) {
-                VoteRepo.Entry e = entries.get(i - 1);
-                safe(() -> {
-                    api.text(e.word() + " ·" + e.votes());
-                    api.tooltip(e.word());
-                });
+    private boolean displayLibHasScreen() {
+        return PackFiles.displayLib().getScreenRegistry().hasScreen(SCREEN_ID);
+    }
+
+    private void writePage(Player player, int page, int pages, List<String> keys, WordBombConfig config) {
+        Map<String, String> labels = plugin.chat().messages().configLabels();
+        Map<String, Object> values = values(config);
+        StorageAPI st = storage(player);
+        st.set(KEY + "page", page);
+        st.set(KEY + "pages", pages);
+        for (int i = 1; i <= ROWS; i++) {
+            int index = page * ROWS + i - 1;
+            if (index < keys.size()) {
+                String key = keys.get(index);
+                st.set(KEY + "row." + i + ".key", key);
+                st.set(KEY + "row." + i + ".label", labels != null && labels.containsKey(key) ? labels.get(key) : key);
+                st.set(KEY + "row." + i + ".value", format(values.get(key)));
             } else {
-                safe(() -> {
-                    api.text("-");
-                    api.tooltip("");
-                });
+                st.remove(KEY + "row." + i + ".key");
+                st.remove(KEY + "row." + i + ".label");
+                st.remove(KEY + "row." + i + ".value");
             }
         }
     }
 
-    private void setText(Widget widget, String id, String text) {
-        safe(() -> new WidgetAPI(id, widget).text(text));
-    }
-
-    private void safe(Runnable r) {
-        try {
-            r.run();
-        } catch (RuntimeException e) {
-            plugin.getLogger().fine("config screen: " + e.getMessage());
+    /** Текущие значения редактируемых настроек по ключам. */
+    private static Map<String, Object> values(WordBombConfig config) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        for (RecordComponent c : WordBombConfig.class.getRecordComponents()) {
+            try {
+                out.put(c.getName(), c.getAccessor().invoke(config));
+            } catch (ReflectiveOperationException ignored) {
+            }
         }
+        return out;
     }
 
     private static String format(Object value) {
@@ -139,8 +138,35 @@ public final class ConfigScreen {
         return String.valueOf(value);
     }
 
-    /** Ключи, доступные на экране и в {@code /wb config set}. */
-    public static List<String> keys() {
+    private static StorageAPI storage(Player player) {
+        return StorageAPI.forPlayer(player.getUniqueId());
+    }
+
+    private static int asInt(Object o) {
+        if (o instanceof Number n) return n.intValue();
+        try {
+            return Integer.parseInt(String.valueOf(o));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Ключи в порядке экрана: сначала как в {@code configLabels} (порядок задаёт сервер), затем остальные редактируемые.
+     */
+    public List<String> keys() {
+        List<String> editable = ConfigLoader.editableKeys();
+        List<String> out = new ArrayList<>();
+        Map<String, String> labels = plugin.chat().messages().configLabels();
+        if (labels != null) {
+            for (String k : labels.keySet()) if (editable.contains(k)) out.add(k);
+        }
+        for (String k : editable) if (!out.contains(k)) out.add(k);
+        return out;
+    }
+
+    /** Ключи, доступные в {@code /wb config set}. */
+    public static List<String> editableKeys() {
         return ConfigLoader.editableKeys();
     }
 }

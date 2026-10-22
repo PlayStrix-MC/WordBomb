@@ -203,6 +203,7 @@ public final class WbCommand implements CommandExecutor {
             case "setcenter" -> setCenter(player);
             case "sethologram" -> setHologram(player, args);
             case "set" -> setValue(player, arg(args, 2), arg(args, 3));
+            case "page" -> plugin.configScreen().page(player, arg(args, 2));
             default -> chat().send(player, m().unknownCommand());
         }
     }
@@ -228,7 +229,7 @@ public final class WbCommand implements CommandExecutor {
     /** {@code /wb config set <ключ> <значение>}: проверка до записи, затем reload и перерисовка экрана настроек. */
     private void setValue(Player player, String key, String value) {
         if (key == null || value == null) {
-            chat().send(player, m().configKeys(), "word", String.join(", ", ConfigScreen.keys()));
+            chat().send(player, m().configKeys(), "word", String.join(", ", ConfigScreen.editableKeys()));
             return;
         }
         Object stored;
@@ -237,7 +238,7 @@ public final class WbCommand implements CommandExecutor {
             plugin.reload();
         } catch (ConfigLoader.BadValue e) {
             chat().send(player, m().configBadValue(), "word", key, "count", value);
-            chat().send(player, m().configKeys(), "word", String.join(", ", ConfigScreen.keys()));
+            chat().send(player, m().configKeys(), "word", String.join(", ", ConfigScreen.editableKeys()));
             return;
         } catch (RuntimeException e) {
             chat().send(player, m().reloadFailed(), "word", e.getMessage());
