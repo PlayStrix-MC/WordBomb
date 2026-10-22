@@ -1,0 +1,23 @@
+// wordbomb_set_center: подсказка админу после /wb config setCenter - надпись со стрелкой над новым центром арены.
+// Видит только тот, кто выполнил команду (viewers: owner). Создан плагином WordBomb один раз, дальше файл правит сервер.
+String id = "wordbomb_set_center";
+String viewers = "owner";
+int keyframeTicks = 4;
+
+dyn render = {
+    type: "TEXT",
+    text: [ { text: "Центр арены", color: "#FFCC45" }, { text: "\n" }, { text: "▼", color: "#FF6545" } ],
+    billboard: "CENTER",
+    brightness: 15,
+    shadow: true,
+};
+
+dyn emitter = { shape: "BOX", size: [0, 0.1, 0], count: 1 };
+
+dyn motion = { lifetime: [80, 100], speed: 0, gravity: -0.0025, drag: 0.3 };
+
+dyn animation = {
+    scale: 1.2,
+    fadeIn: 4,
+    opacity: [[0, 0], [0.15, 1], [0.8, 1], [1, 0]],
+};

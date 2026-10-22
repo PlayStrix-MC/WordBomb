@@ -1,0 +1,8 @@
+build/
+.gradle/
+.idea/
+*.iml
+out/
+# рабочие данные старого плагина: словарь 34 МБ не коммитим, остальное - образец для импорта
+word_bomb/dictionary.txt
+word_bomb/wordbomb.db*

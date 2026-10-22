@@ -1,0 +1,27 @@
+// wordbomb_arena.jmp: скрипт публичного экрана арены WordBomb.
+// Создан плагином один раз, дальше его правит сервер.
+//
+// Java → скрипт: плагин вызывает render(state, players, seconds, round) при каждом изменении игры и раз в секунду.
+//   state   - текст состояния («Ожидание игроков», «Старт через 12», «Идёт игра · раунд 3»), берётся из messages.jmc
+//   players - игроков в очереди / живых
+//   seconds - секунды до старта или до конца хода; -1, если таймер не идёт
+//   round   - номер раунда (с нуля)
+// Если функции render нет, плагин сам ставит тексты виджетов state / players / timer.
+//
+// Скрипт → Java: клики по кнопкам join / leave обрабатывает сам плагин (DisplayClickEvent по id виджета) и
+// отменяет событие, поэтому функции ниже обычно не вызываются. Они остаются запасным путём на случай, если
+// плагин не перехватил клик (например, экран открыт без WordBomb): тогда действие идёт командой от имени игрока.
+
+void render(dyn state, dyn players, dyn seconds, dyn round) {
+    screen.widget("state").text([ { text: state, color: "white" } ]);
+    screen.widget("players").text([ { text: "☻ " + players, color: "#A1EFFF" } ]);
+    screen.widget("timer").text([ { text: seconds >= 0 ? "⌚ " + seconds : "⌚ -", color: "#A1EFFF" } ]);
+}
+
+void join(dyn widget, dyn player) {
+    player.command("wb join");
+}
+
+void leave(dyn widget, dyn player) {
+    player.command("wb leave");
+}

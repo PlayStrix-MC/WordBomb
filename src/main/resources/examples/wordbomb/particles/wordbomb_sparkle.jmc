@@ -1,0 +1,26 @@
+// wordbomb_sparkle: искры в момент, когда старое слово над ареной рассыпается и появляется новое.
+// Создан плагином WordBomb один раз, дальше файл правит сервер. Палитра плагина: #FFCC45 → #FF6545.
+// Размеры рассчитаны на слово масштаба 3 (wordScale в config.jmc).
+String id = "wordbomb_sparkle";
+String viewers = "all";
+int keyframeTicks = 4;
+
+dyn render = {
+    type: "TEXT",
+    variants: ["★", "✦", "✧", "✶"],
+    colors: ["#FFCC45", "#FFB545", "#FF8745", "#FF6545", "#FFE6A0"],
+    brightness: 15,
+};
+
+dyn emitter = { shape: "SPHERE", radius: 0.5, count: 18 };
+
+dyn motion = { lifetime: [16, 28], speed: [0.12, 0.22], direction: "OUTWARD", drag: 0.1 };
+
+dyn animation = {
+    scale: [1.2, 2.2],
+    endScale: 0,
+    easing: "EASE_IN",
+    fadeIn: 3,
+    rotation: [0, 360],
+    spin: [-12, 12],
+};

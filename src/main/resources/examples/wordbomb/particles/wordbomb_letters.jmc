@@ -1,0 +1,30 @@
+// wordbomb_letters: буквы рассыпающегося слова над ареной WordBomb (TextShatter из плагина).
+// Создан плагином WordBomb один раз, дальше файл правит сервер.
+// Текст, размер и цвет каждой частицы задаёт сам запуск (буква слова с её градиентом), здесь - как они летят:
+// от середины слова в стороны, падают, отскакивают от блоков и сжимаются в ноль.
+// Без colors и fadeIn - буквы сохраняют цвет слова; billboard CENTER, как у висящего слова.
+String id = "wordbomb_letters";
+String viewers = "all";
+int keyframeTicks = 4;
+
+dyn render = { type: "TEXT", text: "?", billboard: "CENTER", brightness: 15 };   // text - запасной, буквы приходят из запуска
+
+dyn emitter = { count: 0 };   // частицы задаёт запуск (по букве)
+
+dyn motion = {
+    lifetime: [80, 100],
+    speed: [0.1, 0.2],
+    direction: "OUTWARD",
+    spread: 40,
+    gravity: 0.01,
+    drag: 0.01,
+    collide: true,
+    bounce: 0.6,
+    friction: 0.5,
+};
+
+dyn animation = {
+    endScale: 0,
+    easing: "EASE_IN",
+    spin: [-4, 4],
+};

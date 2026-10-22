@@ -1,0 +1,36 @@
+// wordbomb_skull: череп над выбывшим игроком WordBomb. Запуск из плагина: Particles.play("wordbomb_skull", loc).
+// Создан плагином WordBomb один раз, дальше файл правит сервер.
+// Поведение как у старого плагина: поднимается с затуханием, за первые тики вырастает, в конце тает.
+// Цвет - случайная точка градиента #FFCC45 → #FF6545.
+String id = "wordbomb_skull";
+String viewers = "all";
+int keyframeTicks = 4;
+
+dyn render = {
+    type: "TEXT",
+    text: "☠",
+    colors: ["#FFCC45", "#FFB545", "#FF9E45", "#FF8745", "#FF6545"],
+    billboard: "CENTER",
+    brightness: 15,
+    shadow: true,
+};
+
+dyn emitter = { shape: "POINT", count: 1 };
+
+dyn motion = {
+    lifetime: 100,
+    speed: 0.11,
+    direction: [0, 1, 0],
+    spread: 0,
+    gravity: 0,
+    drag: 0.1,
+    collide: false,
+};
+
+dyn animation = {
+    scale: 5,
+    endScale: 0.6,
+    easing: "EASE_OUT",
+    fadeIn: 5,
+    opacity: [[0, 1], [0.85, 1], [1, 0]],
+};

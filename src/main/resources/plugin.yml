@@ -1,0 +1,24 @@
+name: WordBomb
+version: '${version}'
+main: padej.wordbomb.bukkit.WordBombPlugin
+api-version: '1.21'
+load: STARTUP
+author: Padej_
+description: 'Bomb Party на русских словах: публичный экран DisplayLib, словарь в SQLite'
+
+depend: [DisplayLib]
+softdepend: [PlaceholderAPI]
+
+commands:
+  wb:
+    description: 'WordBomb command'
+    usage: '/wb <join|leave|start|offer|report|offer-list|report-list|top|accept|block|add|remove|search|config|reload>'
+    aliases: [wordbomb]
+
+permissions:
+  wordbomb.admin:
+    description: 'Administration of WordBomb (dictionary moderation, arena config, reload)'
+    default: op
+  event_manager.event:
+    description: 'Legacy alias of wordbomb.admin (kept for compatibility with the old plugin)'
+    default: op
