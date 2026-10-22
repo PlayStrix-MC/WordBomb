@@ -19,6 +19,7 @@ import padej.wordbomb.core.GameSession;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -160,6 +161,20 @@ public final class GamePresenter implements GameListener {
     public void onRoundCompleted(int round) {
         for (Player p : online(session().participants())) SoundTable.roundCompleted(p);
         plugin.arena().render();
+    }
+
+    /** Подсказка после таймаута: 1-3 слова, подходящие под шаблон и не использованные в этой игре (config: eliminationHints). */
+    @Override
+    public void onTurnLost(UUID player, String template, Set<String> usedWords) {
+        int count = cfg().eliminationHints();
+        if (count <= 0) return;
+        Set<String> used = Set.copyOf(usedWords);
+        List<UUID> audience = session().participants();
+        plugin.async().supply(() -> plugin.dictionary().randomContaining(template, used, count), hints -> {
+            if (hints.isEmpty()) return;
+            String joined = String.join(", ", hints);
+            for (Player p : online(audience)) chat().send(p, m().eliminationHints(), "word", joined, "template", template, "player", name(player));
+        });
     }
 
     @Override

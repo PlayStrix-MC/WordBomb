@@ -80,6 +80,16 @@ class GameSessionTest {
             events.add("round:" + round);
         }
 
+        String lostTemplate;
+        java.util.Set<String> lostUsed;
+
+        @Override
+        public void onTurnLost(UUID player, String template, java.util.Set<String> usedWords) {
+            lostTemplate = template;
+            lostUsed = java.util.Set.copyOf(usedWords);
+            events.add("lost:" + template);
+        }
+
         @Override
         public void onPlayerEliminated(UUID player, EliminationReason reason, int alivePlayers) {
             events.add("elim:" + reason + ":" + alivePlayers);
@@ -223,6 +233,20 @@ class GameSessionTest {
         assertEquals(1, session.round());
         assertTrue(listener.events.contains("elimround:1"));
         assertTrue(session.isSpectator(a));
+    }
+
+    @Test
+    void timeoutReportsLostTemplateAndUsedWordsBeforeElimination() {
+        startWith(a, b, c);
+        session.submitWord(a, "абв");
+        for (int i = 0; i < 10; i++) session.tick();
+        assertEquals("аб", listener.lostTemplate);
+        assertEquals(java.util.Set.of("абв"), listener.lostUsed);
+        assertTrue(listener.events.indexOf("lost:аб") < listener.events.indexOf("elim:TIMEOUT:2"));
+        // выход с сервера - без подсказки
+        listener.lostTemplate = null;
+        session.eliminate(c, GameListener.EliminationReason.QUIT);
+        assertNull(listener.lostTemplate);
     }
 
     @Test

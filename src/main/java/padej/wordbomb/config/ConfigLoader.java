@@ -72,6 +72,7 @@ public final class ConfigLoader {
         require(c.circleRadius() > 0, "circleRadius must be > 0");
         require(c.spectatorLeash() > 0, "spectatorLeash must be > 0");
         require(c.wordScale() > 0, "wordScale must be > 0");
+        require(c.eliminationHints() >= 0 && c.eliminationHints() <= 3, "eliminationHints must be 0..3");
     }
 
     private void require(boolean ok, String message) {

@@ -109,4 +109,18 @@ class TemplateGeneratorTest {
         g.reset();
         assertTrue(g.recent().isEmpty());
     }
+
+    @Test
+    void usedWordsAreNotTemplateSources() {
+        // два слова; одно уже использовано - шаблоны должны браться только из второго
+        Rules rules = new Rules(2, 20, 20, 5, 5, 1.0, 0, 50);
+        TemplateGenerator g = new TemplateGenerator(lexicon(List.of("мама", "папа"), new Random(3)), rules, new Random(4));
+        for (int i = 0; i < 100; i++) {
+            String t = g.next(Set.of("мама"));
+            assertNotNull(t);
+            assertTrue("папа".startsWith(t) || "папа".endsWith(t), t);
+        }
+        // все слова использованы - шаблона нет
+        assertNull(g.next(Set.of("мама", "папа")));
+    }
 }

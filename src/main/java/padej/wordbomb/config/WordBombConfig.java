@@ -40,6 +40,8 @@ public record WordBombConfig(
         int templateHistory,
         int templateAttempts,
         int minPlayers,
+        @Config.Comment("When a player runs out of time, show this many words that fit the template and were not used yet (0 = off, max 3)")
+        int eliminationHints,
         @Config.Comment("Folder with the old plugin's txt files (relative to plugins/) imported into the database on first run")
         String legacyDataFolder) {
 
@@ -48,6 +50,7 @@ public record WordBombConfig(
             new Place("world", -451.0, 79.0, 6489.0, -180f, 0f),
             50, 10, 20, 10, 8, 3.0, true,
             20, 20, 5, 5, 0.9, 20, 50, 2,
+            2,
             "word_bomb");
 
     /** Правила игры для ядра. */

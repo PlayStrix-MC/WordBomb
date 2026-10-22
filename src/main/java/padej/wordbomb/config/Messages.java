@@ -35,6 +35,7 @@ public record Messages(
         String quitEliminated,
         String leftZoneEliminated,
         String spectatorTooFar,
+        String eliminationHints,
 
         // --- конец
         String winner,
@@ -128,6 +129,7 @@ public record Messages(
             "&6{player} &cвышел с сервера и выбывает!",
             "&6{player} &cпокинул зону и выбывает!",
             "&cВы слишком далеко отошли от центра!",
+            "&7Подошло бы: &f{word}",
 
             "&aПобедитель: &6{player}&a!",
             "&eИгра окончена!",

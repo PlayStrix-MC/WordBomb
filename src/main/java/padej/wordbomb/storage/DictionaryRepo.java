@@ -8,7 +8,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * Словарь в таблице {@code dictionary}: индексированный lookup и случайное слово из всего словаря
@@ -61,6 +64,31 @@ public final class DictionaryRepo implements Lexicon {
             try (Statement st = c.createStatement(); ResultSet rs = st.executeQuery("SELECT word FROM dictionary ORDER BY id LIMIT 1")) {
                 return rs.next() ? rs.getString(1) : null;
             }
+        });
+    }
+
+    /**
+     * Случайные слова, содержащие {@code template} и не входящие в {@code excluded} (нормализованные), не больше
+     * {@code limit}. Полный проход таблицы (instr) - вызывать вне главного потока.
+     */
+    public List<String> randomContaining(String template, Set<String> excluded, int limit) {
+        String t = TextNormalizer.normalize(template);
+        if (t == null || t.isEmpty() || limit <= 0) return List.of();
+        return db.read(c -> {
+            List<String> out = new ArrayList<>();
+            // кандидатов берём с запасом, исключения отсеиваем в Java (список использованных слов невелик)
+            try (PreparedStatement ps = c.prepareStatement(
+                    "SELECT word FROM dictionary WHERE instr(word, ?) > 0 ORDER BY RANDOM() LIMIT ?")) {
+                ps.setString(1, t);
+                ps.setInt(2, limit + excluded.size());
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next() && out.size() < limit) {
+                        String w = rs.getString(1);
+                        if (!excluded.contains(w)) out.add(w);
+                    }
+                }
+            }
+            return out;
         });
     }
 

@@ -34,6 +34,12 @@ public interface GameListener {
     /** Все живые ответили - начался раунд {@code round}. */
     default void onRoundCompleted(int round) {}
 
+    /**
+     * Игрок не успел ответить на {@code template}: вызывается перед {@link #onPlayerEliminated} при таймауте.
+     * {@code usedWords} - слова этой игры (нормализованные), чтобы показать подходившие варианты.
+     */
+    default void onTurnLost(UUID player, String template, java.util.Set<String> usedWords) {}
+
     default void onPlayerEliminated(UUID player, EliminationReason reason, int alivePlayers) {}
 
     /** После выбывания игра продолжается новым раундом {@code round}. */

@@ -73,4 +73,15 @@ class DictionaryRepoTest {
         assertEquals(2, added);
         assertTrue(repo.contains("еще"));
     }
+
+    @Test
+    void randomContainingSkipsExcludedWords() {
+        repo.addAll(List.of("привет", "ответ", "свет", "ветер", "дом"));
+        List<String> hints = repo.randomContaining("вет", Set.of("привет", "свет"), 3);
+        assertEquals(2, hints.size());
+        assertTrue(hints.containsAll(List.of("ответ", "ветер")), hints.toString());
+        assertEquals(1, repo.randomContaining("вет", Set.of(), 1).size());
+        assertTrue(repo.randomContaining("юю", Set.of(), 3).isEmpty());
+        assertTrue(repo.randomContaining("вет", Set.of(), 0).isEmpty());
+    }
 }

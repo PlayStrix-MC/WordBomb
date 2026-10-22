@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * Шаблон хода: 2 буквы (с вероятностью {@link Rules#twoLetterChance()}) или 3, префикс или суффикс
@@ -26,12 +27,21 @@ public final class TemplateGenerator {
 
     /** Следующий шаблон или {@code null}, если словарь пуст. */
     public String next() {
+        return next(Set.of());
+    }
+
+    /**
+     * Следующий шаблон, источник которого - слово, ещё не использованное в этой игре ({@code used}, нормализованные):
+     * так на шаблон гарантированно есть хотя бы одно подходящее неиспользованное слово. Слова из {@code used}
+     * пропускаются (в пределах {@link Rules#templateAttempts()} попыток).
+     */
+    public String next(Set<String> used) {
         String template = null;
         for (int attempt = 0; attempt < rules.templateAttempts(); attempt++) {
             String word = dictionary.randomWord();
             if (word == null) break;
             word = TextNormalizer.normalize(word);
-            if (word.isEmpty()) continue;
+            if (word.isEmpty() || used.contains(word)) continue;
             template = templateOf(word);
             if (!recent.contains(template)) break;
         }

@@ -164,7 +164,7 @@ public final class GameSession {
             return;
         }
         if (currentIndex >= players.size()) currentIndex = 0;
-        template = templates.next();
+        template = templates.next(usedWords);
         if (template == null) {
             // словарь пуст - играть нечем
             endGame();
@@ -229,6 +229,9 @@ public final class GameSession {
         if (currentIndex >= players.size()) currentIndex = 0;
         timer.stop();
         publish();
+        if (reason == GameListener.EliminationReason.TIMEOUT && template != null) {
+            listener.onTurnLost(player, template, Collections.unmodifiableSet(usedWords));
+        }
         listener.onPlayerEliminated(player, reason, players.size());
         if (players.size() <= 1) {
             endGame();
