@@ -12,10 +12,10 @@ softdepend: [PlaceholderAPI]
 commands:
   wb:
     description: 'WordBomb command'
-    usage: '/wb <join|leave|start|offer|report|offer-list|report-list|top|accept|block|add|remove|search|config|reload>'
+    usage: '/wb <join|leave|start|offer|report|offer-list|report-list|top|accept|block|add|remove|search|config|mod|reload>'
     aliases: [wordbomb]
 
 permissions:
   wordbomb.eventer:
-    description: 'Everything behind the game: /wb join|leave|start, dictionary moderation, arena config, reload'
+    description: 'Everything behind the game: /wb join|leave|start, dictionary moderation (/wb mod), arena config, reload'
     default: op

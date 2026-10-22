@@ -380,7 +380,7 @@ Policy.allowClass("padej.wordbomb.bukkit.api.ArenaApi");
 |---|---|
 | `/wb offer`, `/wb report`, `/wb offer-list`, `/wb report-list`, `/wb top` | - |
 | `/wb join`, `/wb leave`, `/wb start` | `wordbomb.eventer` |
-| `/wb accept`, `/wb block`, `/wb add`, `/wb remove`, `/wb search`, `/wb config ...`, `/wb reload` | `wordbomb.eventer` |
+| `/wb accept`, `/wb block`, `/wb add`, `/wb remove`, `/wb search`, `/wb config ...`, `/wb mod ...`, `/wb reload` | `wordbomb.eventer` |
 
 Старое `event_manager.event` не поддерживается: выдайте `wordbomb.eventer` той же группе.
 
@@ -456,7 +456,8 @@ Bukkit-слой проверяем вручную на тестовом серв
 | Заморозка | `PlayerFreezer` сохраняет исходные значения атрибутов и возвращает их (не 0.1/0.42). Наблюдателям возвращается прежний игровой режим. |
 | Экран | `plugins/DisplayLib/screens/wordbomb_arena.jmc`, `scripts/wordbomb_arena.jmp`, `particles/wordbomb_skull.jmc` создаются из ресурсов `examples/wordbomb/...` только если файлов нет. Экран ставится на первом тике сервера (плагин грузится на `STARTUP`, миры позже), только если DisplayLib ещё не восстановил persistent-экран с этим id. `/wb config setHologram` без аргументов ставит экран в точку админа лицом к нему. |
 | Слово в центре | `effects/WordDisplay`: `TextDisplay` с градиентом `#FFCC45 → #FF6545`, при смене - `Particles.shatter(...).effect("letters").hold(0)`. Нужен пример `letters.jmc` DisplayLib (`/displaylib examples`); без него слово просто меняется, в лог - предупреждение. |
-| Экран настроек | `wordbomb_config` (приватный, `/wb config` без аргументов, `wordbomb.eventer`): значения настроек - кнопки с `id = ключ config.jmc`. Java пишет значения в виджеты (`ConfigScreen`), скрипт превращает клики в команды: значение → `player.input(...)` → `/wb config set <ключ> <значение>` (проверка до записи в файл, `ConfigLoader.setValue`). Модерация словаря с экрана отложена (код для виджетов `offer_N`/`report_N` в `ConfigScreen` остался, экран их не содержит). Нужен DisplayLib с `player.input`. |
+| Экран настроек | `wordbomb_config` (приватный, `/wb config` без аргументов, `wordbomb.eventer`): значения настроек - кнопки с `id = ключ config.jmc`. Java пишет значения в виджеты (`ConfigScreen`), скрипт превращает клики в команды: значение → `player.input(...)` → `/wb config set <ключ> <значение>` (проверка до записи в файл, `ConfigLoader.setValue`). Модерация словаря - отдельный экран `wordbomb_mod` (ниже). Нужен DisplayLib с `player.input`. |
+| Экран модерации | `wordbomb_mod` (приватный, `/wb mod`, `wordbomb.eventer`, morph включён): вкладки предложения/жалобы, 8 строк на страницу, ◀ ▶. Java (`ModerationScreen`) кладёт страницу в `storage` игрока DisplayLib (`wordbomb_mod.kind/page/pages/total/row.N.word/votes`) и открывает экран заново (`switchScreen` на тот же id → morph от старых слов к новым; нужен DisplayLib от 22.10.2026, где цель morph - состояние после `onOpen`). Скрипт `wordbomb_mod.jmp` в `onOpen` читает storage, клики превращает в `/wb mod tab|page` и `/wb accept|block`. После `accept`/`block` экран перерисовывается. |
 | Тесты | `./gradlew test`: ядро (`core`), конфиг (`ConfigLoaderTest`, против настоящего Jumper) и хранилище (`storage`, SQLite in-memory). Слой `bukkit` - вручную на тестовом сервере. |
 
 Что проверить на тестовом сервере в первую очередь: расстановка по кругу и заморозка, чат во время игры, клики по публичному экрану, импорт `dictionary.txt` (1,5 млн строк - несколько секунд при старте), `%wordbomb_top_1%`.

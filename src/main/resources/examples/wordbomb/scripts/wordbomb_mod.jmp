@@ -1,0 +1,75 @@
+// wordbomb_mod.jmp: скрипт экрана модерации словаря WordBomb (/wb mod). Создан плагином один раз, дальше правит сервер.
+//
+// Данные страницы кладёт в storage игрока плагин (ключи wordbomb_mod.*), а экран открывает заново - так работает
+// morph: onOpen читает storage и пишет слова в строки, анимация идёт от старых слов к новым.
+//   wordbomb_mod.kind   - "offers" (предложения) или "reports" (жалобы)
+//   wordbomb_mod.page   - текущая страница (с нуля), wordbomb_mod.pages - сколько всего, wordbomb_mod.total - слов всего
+//   wordbomb_mod.row.N.word / .votes - строка N (1..8); пусто - строки нет
+// Действия - командами /wb от имени игрока (право wordbomb.eventer); плагин сам обновляет данные и переоткрывает экран.
+
+int rows = 8;
+
+String kind() { return storage.get("wordbomb_mod.kind", "offers"); }
+int page() { return storage.get("wordbomb_mod.page", 0); }
+int pages() { return storage.get("wordbomb_mod.pages", 1); }
+
+void onOpen() {
+    boolean offers = kind() == "offers";
+    dyn active = offers ? screen.widget("tab_offers") : screen.widget("tab_reports");
+    dyn passive = offers ? screen.widget("tab_reports") : screen.widget("tab_offers");
+    if (offers) active.bgColor(0, 110, 40); else active.bgColor(140, 0, 20);
+    passive.bgColor(60, 60, 64);
+
+    for (int i = 1; i <= rows; i++) {
+        dyn w = screen.widget("row_" + i);
+        String word = storage.get("wordbomb_mod.row." + i + ".word", "");
+        if (word == "") {
+            w.text([ { text: "—", color: "dark_gray" } ]);
+            w.tooltip("");
+            w.enabled(false);
+        } else {
+            int votes = storage.get("wordbomb_mod.row." + i + ".votes", 0);
+            w.text([ { text: word, color: "white" }, { text: "  ·" + votes, color: offers ? "#72DDFF" : "#FFB3B3" } ]);
+            w.tooltip(offers ? "Принять в словарь" : "Удалить из словаря");
+            w.enabled(true);
+        }
+    }
+
+    int total = storage.get("wordbomb_mod.total", 0);
+    screen.widget("page").text("Страница " + (page() + 1) + " из " + pages() + "  ·  слов: " + total);
+    screen.widget("prev").enabled(page() > 0);
+    screen.widget("next").enabled(page() < pages() - 1);
+}
+
+// клик по строке row_N: слово берём из storage по номеру строки
+void row(dyn widget, dyn player) {
+    String id = widget.id();
+    String word = storage.get("wordbomb_mod.row." + id.substring(4) + ".word", "");
+    if (word == "") return;
+    player.sound("ui.button.click", 0.6, 1);
+    if (kind() == "offers") player.command("wb accept " + word); else player.command("wb block " + word);
+}
+
+void tab_offers(dyn widget, dyn player) {
+    if (kind() == "offers") return;
+    player.sound("ui.button.click", 0.6, 1);
+    player.command("wb mod tab offers");
+}
+
+void tab_reports(dyn widget, dyn player) {
+    if (kind() == "reports") return;
+    player.sound("ui.button.click", 0.6, 1);
+    player.command("wb mod tab reports");
+}
+
+void prev(dyn widget, dyn player) {
+    if (page() <= 0) return;
+    player.sound("item.book.page_turn");
+    player.command("wb mod page prev");
+}
+
+void next(dyn widget, dyn player) {
+    if (page() >= pages() - 1) return;
+    player.sound("item.book.page_turn");
+    player.command("wb mod page next");
+}

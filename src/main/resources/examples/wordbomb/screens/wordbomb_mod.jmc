@@ -1,0 +1,52 @@
+// wordbomb_mod: приватный экран модерации словаря WordBomb, открывается командой /wb mod (право wordbomb.eventer).
+// Файл создан плагином WordBomb один раз - дальше его правит сервер (редактор DisplayLib), плагин его не перезаписывает.
+//
+// Вкладки «Предложения» / «Жалобы», 8 строк на страницу, ◀ ▶ - страницы. Данные страницы (слова и голоса) плагин
+// кладёт в storage игрока и открывает этот же экран заново - morph перетекает из старых слов в новые
+// (цель анимации - состояние виджетов после onOpen, DisplayLib от 22.10.2026). Скрипт: wordbomb_mod.jmp.
+// Клик по строке: на вкладке предложений - /wb accept <слово>, на вкладке жалоб - /wb block <слово>.
+// Id виджетов менять нельзя (title можно), остальное - можно.
+
+String id = "wordbomb_mod";
+String screenType = "PRIVATE";
+int tickRate = 4;
+double interactionRadius = 6;
+double closeDistance = 10;
+String script = "wordbomb_mod.jmp";
+dyn morph = { enabled: true, duration: 10, steps: 10 };
+
+dyn background = { color: [10, 10, 10], alpha: 210, scale: [16, 9, 1], anchor: "CENTER" };
+
+dyn rowScale = [0.5, 0.5, 0.5];
+dyn rowTol = [0.9, 0.08];
+dyn rowBg = [30, 32, 44];
+
+dyn widgets = [
+    { id: "title", text: [ { text: "Word", color: "#FFCC45" }, { text: "Bomb", color: "#FF6545" }, { text: " · модерация словаря", color: "white" } ],
+      position: [0, 1.85, -0.01], scale: [0.7, 0.7, 0.7], tolerance: [0, 0], backgroundAlpha: 0 },
+
+    // вкладки: активную подсвечивает onOpen
+    { id: "tab_offers",  text: "Предложения", position: [-1.3, 1.3, -0.01], scale: [0.55, 0.55, 0.55], tolerance: [0.5, 0.09],
+      backgroundColor: [60, 60, 64], backgroundAlpha: 200, onClick: true },
+    { id: "tab_reports", text: "Жалобы", position: [1.3, 1.3, -0.01], scale: [0.55, 0.55, 0.55], tolerance: [0.35, 0.09],
+      backgroundColor: [60, 60, 64], backgroundAlpha: 200, onClick: true },
+
+    // строки: в файле - заглушки, слова пишет onOpen из storage; клик = принять / заблокировать
+    { id: "row_1", text: "…", position: [0, 0.8,  -0.01], scale: rowScale, tolerance: rowTol, backgroundColor: rowBg, backgroundAlpha: 160, onClick: "row" },
+    { id: "row_2", text: "…", position: [0, 0.5,  -0.01], scale: rowScale, tolerance: rowTol, backgroundColor: rowBg, backgroundAlpha: 160, onClick: "row" },
+    { id: "row_3", text: "…", position: [0, 0.2,  -0.01], scale: rowScale, tolerance: rowTol, backgroundColor: rowBg, backgroundAlpha: 160, onClick: "row" },
+    { id: "row_4", text: "…", position: [0, -0.1, -0.01], scale: rowScale, tolerance: rowTol, backgroundColor: rowBg, backgroundAlpha: 160, onClick: "row" },
+    { id: "row_5", text: "…", position: [0, -0.4, -0.01], scale: rowScale, tolerance: rowTol, backgroundColor: rowBg, backgroundAlpha: 160, onClick: "row" },
+    { id: "row_6", text: "…", position: [0, -0.7, -0.01], scale: rowScale, tolerance: rowTol, backgroundColor: rowBg, backgroundAlpha: 160, onClick: "row" },
+    { id: "row_7", text: "…", position: [0, -1.0, -0.01], scale: rowScale, tolerance: rowTol, backgroundColor: rowBg, backgroundAlpha: 160, onClick: "row" },
+    { id: "row_8", text: "…", position: [0, -1.3, -0.01], scale: rowScale, tolerance: rowTol, backgroundColor: rowBg, backgroundAlpha: 160, onClick: "row" },
+
+    { id: "prev", text: "◀", position: [-1.2, -1.85, -0.01], scale: [0.6, 0.6, 0.6], tolerance: [0.1, 0.08],
+      backgroundColor: [0, 139, 241], backgroundAlpha: 200, onClick: true },
+    { id: "page", text: "Страница ?", position: [0, -1.85, -0.01], scale: [0.5, 0.5, 0.5], tolerance: [0, 0], backgroundAlpha: 0 },
+    { id: "next", text: "▶", position: [1.2, -1.85, -0.01], scale: [0.6, 0.6, 0.6], tolerance: [0.1, 0.08],
+      backgroundColor: [0, 139, 241], backgroundAlpha: 200, onClick: true },
+
+    { id: "close", text: "Закрыть", position: [0, -2.4, -0.01], scale: [0.5, 0.5, 0.5], tolerance: [0.35, 0.08],
+      backgroundColor: [60, 60, 60], backgroundAlpha: 200, onClick: { close: true } },
+];

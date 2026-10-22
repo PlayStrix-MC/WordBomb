@@ -82,6 +82,7 @@ public record Messages(
         String configBadValue,
         String configKeys,
         String configScreenFailed,
+        String modScreenFailed,
 
         // --- общее
         String noPermission,
@@ -167,10 +168,11 @@ public record Messages(
             "&cНеверное значение для &f{word}&c: {count}",
             "&7Ключи: &f{word}",
             "&cНе удалось открыть экран настроек (см. консоль).",
+            "&cНе удалось открыть экран модерации (см. консоль).",
 
             "&cУ вас нет прав для этой команды!",
             "&cЭта команда только для игроков!",
-            "&cНеизвестная команда. Используйте: /wb <join|leave|start|offer|report|offer-list|report-list|top|accept|block|add|remove|search|config|reload>",
+            "&cНеизвестная команда. Используйте: /wb <join|leave|start|offer|report|offer-list|report-list|top|accept|block|add|remove|search|config|mod|reload>",
 
             "Ожидание игроков",
             "Старт через {seconds}",

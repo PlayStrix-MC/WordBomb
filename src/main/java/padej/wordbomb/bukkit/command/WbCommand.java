@@ -9,6 +9,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import padej.wordbomb.bukkit.Chat;
 import padej.wordbomb.bukkit.arena.ConfigScreen;
+import padej.wordbomb.bukkit.arena.ModerationScreen;
 import padej.wordbomb.config.ConfigLoader;
 import padej.wordbomb.bukkit.WordBombPlugin;
 import padej.wordbomb.config.Messages;
@@ -63,6 +64,7 @@ public final class WbCommand implements CommandExecutor {
             case "remove" -> eventer(sender, () -> moderate(sender, Moderation.Kind.REMOVE, arg(args, 1)));
             case "search" -> eventer(sender, () -> search(sender, args));
             case "config" -> eventer(sender, () -> asPlayer(sender, p -> config(p, args)));
+            case "mod" -> eventer(sender, () -> asPlayer(sender, p -> mod(p, args)));
             case "reload" -> eventer(sender, () -> reload(sender));
             default -> chat().send(sender, m().unknownCommand());
         }
@@ -148,7 +150,10 @@ public final class WbCommand implements CommandExecutor {
                 case NOT_IN_DICTIONARY -> m().notInDictionaryAdmin();
             };
             chat().send(sender, text, "word", word);
-            if (sender instanceof Player p) plugin.configScreen().refreshIfOpen(p);
+            if (sender instanceof Player p) {
+                plugin.configScreen().refreshIfOpen(p);
+                plugin.moderationScreen().refreshIfOpen(p);
+            }
         });
     }
 
@@ -193,6 +198,24 @@ public final class WbCommand implements CommandExecutor {
             case "setcenter" -> setCenter(player);
             case "sethologram" -> setHologram(player, args);
             case "set" -> setValue(player, arg(args, 2), arg(args, 3));
+            default -> chat().send(player, m().unknownCommand());
+        }
+    }
+
+    /** {@code /wb mod [tab <offers|reports> | page <next|prev|N>]}: экран модерации словаря. */
+    private void mod(Player player, String[] args) {
+        String what = arg(args, 1);
+        if (what == null) {
+            plugin.moderationScreen().open(player);
+            return;
+        }
+        switch (what.toLowerCase(Locale.ROOT)) {
+            case "tab" -> {
+                ModerationScreen.Kind kind = ModerationScreen.Kind.parse(arg(args, 2));
+                if (kind == null) chat().send(player, m().unknownCommand());
+                else plugin.moderationScreen().tab(player, kind);
+            }
+            case "page" -> plugin.moderationScreen().page(player, arg(args, 2));
             default -> chat().send(player, m().unknownCommand());
         }
     }
@@ -333,7 +356,7 @@ public final class WbCommand implements CommandExecutor {
         List<String> common = List.of("offer", "report", "offer-list", "report-list", "top");
         if (!Permissions.isEventer(sender)) return common;
         List<String> all = new java.util.ArrayList<>(common);
-        all.addAll(List.of("join", "leave", "start", "accept", "block", "add", "remove", "search", "config", "reload"));
+        all.addAll(List.of("join", "leave", "start", "accept", "block", "add", "remove", "search", "config", "mod", "reload"));
         return all;
     }
 }
