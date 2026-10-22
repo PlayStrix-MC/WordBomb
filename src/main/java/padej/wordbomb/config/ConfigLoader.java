@@ -4,8 +4,12 @@ import me.padej.jumper.interp.Config;
 import padej.wordbomb.core.Rules;
 
 import java.io.IOException;
+import java.lang.reflect.RecordComponent;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Чтение и запись {@code config.jmc} и {@code messages.jmc} через Jumper: файл создаётся из значений по умолчанию,
@@ -82,6 +86,76 @@ public final class ConfigLoader {
     /** {@code /wb config setHologram}: записать только {@code screen}. */
     public void saveScreen(Place place) {
         update("screen", place);
+    }
+
+    /** Ошибка значения настройки: ключ неизвестен или значение не подходит. */
+    public static final class BadValue extends IllegalArgumentException {
+        public BadValue(String message) {
+            super(message);
+        }
+    }
+
+    /** Ключи числовых и логических настроек, которые можно менять командой и с экрана конфига. */
+    public static List<String> editableKeys() {
+        List<String> keys = new ArrayList<>();
+        for (RecordComponent c : WordBombConfig.class.getRecordComponents()) {
+            Class<?> t = c.getType();
+            if (t == int.class || t == double.class || t == boolean.class) keys.add(c.getName());
+        }
+        return keys;
+    }
+
+    /**
+     * {@code /wb config set <key> <value>}: разобрать значение по типу поля, подставить в текущий конфиг, проверить
+     * ({@link Rules} и {@link #validate}) и только потом записать в файл - неверное значение в файл не попадает.
+     *
+     * @return новое значение (уже типизированное)
+     */
+    public Object setValue(WordBombConfig current, String key, String rawValue) {
+        RecordComponent[] components = WordBombConfig.class.getRecordComponents();
+        RecordComponent target = null;
+        for (RecordComponent c : components) if (c.getName().equals(key)) target = c;
+        if (target == null || !editableKeys().contains(key)) throw new BadValue("unknown key " + key);
+        Object value = parse(target.getType(), rawValue);
+
+        Object[] args = new Object[components.length];
+        try {
+            for (int i = 0; i < components.length; i++) {
+                args[i] = components[i].getName().equals(key) ? value : components[i].getAccessor().invoke(current);
+            }
+            Class<?>[] types = new Class<?>[components.length];
+            for (int i = 0; i < components.length; i++) types[i] = components[i].getType();
+            WordBombConfig candidate = WordBombConfig.class.getDeclaredConstructor(types).newInstance(args);
+            candidate.rules();
+            validate(candidate);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Cannot build config: " + e.getMessage(), e);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            throw new BadValue(e.getMessage());
+        }
+        try {
+            Config.update(configFile(), key, value);
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot write " + configFile() + ": " + e.getMessage(), e);
+        }
+        return value;
+    }
+
+    private static Object parse(Class<?> type, String raw) {
+        String v = raw == null ? "" : raw.trim().replace(',', '.');
+        try {
+            if (type == int.class) return Integer.parseInt(v);
+            if (type == double.class) return Double.parseDouble(v);
+            if (type == boolean.class) {
+                String b = v.toLowerCase(Locale.ROOT);
+                if (b.equals("true") || b.equals("да") || b.equals("1") || b.equals("on")) return true;
+                if (b.equals("false") || b.equals("нет") || b.equals("0") || b.equals("off")) return false;
+                throw new BadValue("not a boolean: " + raw);
+            }
+        } catch (NumberFormatException e) {
+            throw new BadValue("not a number: " + raw);
+        }
+        throw new BadValue("unsupported type " + type.getSimpleName());
     }
 
     private void update(String key, Place place) {

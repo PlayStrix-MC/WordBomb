@@ -1,0 +1,31 @@
+// wordbomb_config.jmp: скрипт экрана настроек WordBomb (/wb config). Создан плагином один раз, дальше правит сервер.
+//
+// Скрипт не знает про Java: значения в виджеты пишет плагин, а действия уходят командами /wb от имени игрока
+// (у открывшего экран есть право wordbomb.eventer). После каждой команды плагин сам перерисовывает экран.
+//
+//   edit(widget, player)   - клик по значению: ждём ввод в чат (player.input), затем /wb config set <id> <текст>
+//   accept(widget, player) - клик по предложению: /wb accept <слово>; слово лежит в tooltip виджета
+//   block(widget, player)  - клик по жалобе: /wb block <слово>
+//
+// Нужен DisplayLib с player.input (сборка от 22.10.2026 и новее).
+
+void edit(dyn widget, dyn player) {
+    String key = widget.id();
+    player.input([ { text: "Новое значение ", color: "gray" }, { text: key, color: "gold" },
+                   { text: " (сейчас " + widget.text() + "), «-» - отмена:", color: "gray" } ], 600, text -> {
+        if (text == "-") return;
+        player.command("wb config set " + key + " " + text);
+    });
+}
+
+void accept(dyn widget, dyn player) {
+    String word = widget.tooltip();
+    if (word == null || word == "") return;
+    player.command("wb accept " + word);
+}
+
+void block(dyn widget, dyn player) {
+    String word = widget.tooltip();
+    if (word == null || word == "") return;
+    player.command("wb block " + word);
+}

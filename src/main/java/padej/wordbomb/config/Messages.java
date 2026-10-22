@@ -78,6 +78,10 @@ public record Messages(
         String lookAtBlock,
         String reloaded,
         String reloadFailed,
+        String configSet,
+        String configBadValue,
+        String configKeys,
+        String configScreenFailed,
 
         // --- общее
         String noPermission,
@@ -159,6 +163,10 @@ public record Messages(
             "&cВы должны смотреть на блок!",
             "&aКонфиг и тексты перечитаны.",
             "&cОшибка перезагрузки: {word}",
+            "&aНастройка &f{word} &a= &e{count}",
+            "&cНеверное значение для &f{word}&c: {count}",
+            "&7Ключи: &f{word}",
+            "&cНе удалось открыть экран настроек (см. консоль).",
 
             "&cУ вас нет прав для этой команды!",
             "&cЭта команда только для игроков!",

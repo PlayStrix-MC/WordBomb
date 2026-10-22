@@ -8,6 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import padej.wordbomb.bukkit.api.ArenaApi;
 import padej.wordbomb.bukkit.arena.ArenaScreen;
+import padej.wordbomb.bukkit.arena.ConfigScreen;
 import padej.wordbomb.bukkit.chat.ChatListener;
 import padej.wordbomb.bukkit.command.WbCommand;
 import padej.wordbomb.bukkit.command.WbTabCompleter;
@@ -64,6 +65,7 @@ public final class WordBombPlugin extends JavaPlugin {
     private GameSession session;
     private ArenaApi api;
     private ArenaScreen arena;
+    private ConfigScreen configScreen;
     private WordBombExpansion papi;
 
     private BukkitTask tickTask;
@@ -120,6 +122,8 @@ public final class WordBombPlugin extends JavaPlugin {
         // 4. экран, команды, слушатели
         arena = new ArenaScreen(this);
         arena.installResources();
+        configScreen = new ConfigScreen(this);
+        configScreen.installResources();
         getServer().getPluginManager().registerEvents(arena, this);
         getServer().getPluginManager().registerEvents(new ChatListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
@@ -295,6 +299,10 @@ public final class WordBombPlugin extends JavaPlugin {
 
     public ArenaScreen arena() {
         return arena;
+    }
+
+    public ConfigScreen configScreen() {
+        return configScreen;
     }
 
     public void papiCacheInvalidate() {

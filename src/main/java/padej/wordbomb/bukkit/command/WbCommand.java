@@ -8,6 +8,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import padej.wordbomb.bukkit.Chat;
+import padej.wordbomb.bukkit.arena.ConfigScreen;
+import padej.wordbomb.config.ConfigLoader;
 import padej.wordbomb.bukkit.WordBombPlugin;
 import padej.wordbomb.config.Messages;
 import padej.wordbomb.config.Place;
@@ -146,6 +148,7 @@ public final class WbCommand implements CommandExecutor {
                 case NOT_IN_DICTIONARY -> m().notInDictionaryAdmin();
             };
             chat().send(sender, text, "word", word);
+            if (sender instanceof Player p) plugin.configScreen().refreshIfOpen(p);
         });
     }
 
@@ -183,14 +186,37 @@ public final class WbCommand implements CommandExecutor {
     private void config(Player player, String[] args) {
         String what = arg(args, 1);
         if (what == null) {
-            chat().send(player, m().unknownCommand());
+            if (!plugin.configScreen().open(player)) chat().send(player, m().configScreenFailed());
             return;
         }
         switch (what.toLowerCase(Locale.ROOT)) {
             case "setcenter" -> setCenter(player);
             case "sethologram" -> setHologram(player, args);
+            case "set" -> setValue(player, arg(args, 2), arg(args, 3));
             default -> chat().send(player, m().unknownCommand());
         }
+    }
+
+    /** {@code /wb config set <ключ> <значение>}: проверка до записи, затем reload и перерисовка экрана настроек. */
+    private void setValue(Player player, String key, String value) {
+        if (key == null || value == null) {
+            chat().send(player, m().configKeys(), "word", String.join(", ", ConfigScreen.keys()));
+            return;
+        }
+        Object stored;
+        try {
+            stored = plugin.configLoader().setValue(plugin.config(), key, value);
+            plugin.reload();
+        } catch (ConfigLoader.BadValue e) {
+            chat().send(player, m().configBadValue(), "word", key, "count", value);
+            chat().send(player, m().configKeys(), "word", String.join(", ", ConfigScreen.keys()));
+            return;
+        } catch (RuntimeException e) {
+            chat().send(player, m().reloadFailed(), "word", e.getMessage());
+            return;
+        }
+        chat().send(player, m().configSet(), "word", key, "count", stored);
+        plugin.configScreen().refreshIfOpen(player);
     }
 
     /** Центр арены = блок, на который смотрит админ (до 5 блоков), +(0.5, 1, 0.5). */

@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -81,5 +82,26 @@ class ConfigLoaderTest {
         loader.saveArena(new Place("", 0, 0, 0, 0, 0));
         IllegalStateException e = assertThrows(IllegalStateException.class, loader::load);
         assertTrue(e.getMessage().contains("arena.world"));
+    }
+
+    @Test
+    void setValueValidatesBeforeWriting() throws IOException {
+        ConfigLoader loader = new ConfigLoader(dir);
+        WordBombConfig cfg = loader.load().config();
+        assertEquals(15, loader.setValue(cfg, "countdownSeconds", "15"));
+        assertEquals(0.5, loader.setValue(cfg, "twoLetterChance", "0,5"));
+        assertEquals(false, loader.setValue(cfg, "freezePlayers", "нет"));
+        WordBombConfig reloaded = loader.load().config();
+        assertEquals(15, reloaded.countdownSeconds());
+        assertEquals(0.5, reloaded.twoLetterChance());
+        assertEquals(false, reloaded.freezePlayers());
+
+        assertThrows(ConfigLoader.BadValue.class, () -> loader.setValue(reloaded, "minTurnSeconds", "0"));
+        assertThrows(ConfigLoader.BadValue.class, () -> loader.setValue(reloaded, "minTurnSeconds", "abc"));
+        assertThrows(ConfigLoader.BadValue.class, () -> loader.setValue(reloaded, "arena", "1"));
+        assertThrows(ConfigLoader.BadValue.class, () -> loader.setValue(reloaded, "nope", "1"));
+        assertEquals(5, loader.load().config().minTurnSeconds(), "bad value must not reach the file");
+        assertTrue(ConfigLoader.editableKeys().contains("countdownSeconds"));
+        assertFalse(ConfigLoader.editableKeys().contains("legacyDataFolder"));
     }
 }

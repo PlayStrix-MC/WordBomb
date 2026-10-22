@@ -29,10 +29,16 @@ public final class WbTabCompleter implements TabCompleter {
             case "accept" -> admin && args.length == 2 ? filter(words(plugin.suggestions()), args[1]) : List.of();
             case "block" -> admin && args.length == 2 ? filter(words(plugin.reports()), args[1]) : List.of();
             case "add", "remove", "offer", "report" -> args.length == 2 ? List.of("<слово>") : List.of();
-            case "config" -> admin && args.length == 2 ? filter(List.of("setCenter", "setHologram"), args[1]) : List.of();
+            case "config" -> admin ? config(args) : List.of();
             case "search" -> admin ? search(args) : List.of();
             default -> List.of();
         };
+    }
+
+    private List<String> config(String[] args) {
+        if (args.length == 2) return filter(List.of("set", "setCenter", "setHologram"), args[1]);
+        if (args.length == 3 && args[1].equalsIgnoreCase("set")) return filter(padej.wordbomb.bukkit.arena.ConfigScreen.keys(), args[2]);
+        return List.of();
     }
 
     private List<String> search(String[] args) {
